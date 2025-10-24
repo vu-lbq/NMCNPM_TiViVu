@@ -1,0 +1,26 @@
+Đặc Tả Yêu Cầu Phần Mềm Học Anh Văn Nâng Cao Khả Năng Giao Tiếp
+1. Mô tả chung:
+Phần mềm này được thiết kế nhằm mục đích cải thiện khả năng giao tiếp tiếng Anh cho người dùng thông qua một môi trường tương tác trực tiếp, mô phỏng cuộc đối thoại một-kèm-một với hệ thống. Ứng dụng có thể được triển khai trên nền tảng web hoặc dạng app di động.
+2. Mục tiêu chính:
+●	Người dùng có thể giao tiếp bằng tiếng Anh với hệ thống, sử dụng công nghệ nhận dạng giọng nói (speech-to-text) và mô hình ngôn ngữ lớn (LLM) tương tự như ChatGPT để tạo ra cuộc đối thoại liên tục và có ý nghĩa.
+3. Chức năng cơ bản:
+●	Nhận Dạng Giọng Nói:
+●	Người dùng đọc câu tiếng Anh, hệ thống sử dụng API nhận dạng giọng nói để chuyển âm thanh sang văn bản.
+●	Người dùng có thể chỉnh sửa văn bản nếu cần và sau đó gửi lại cho hệ thống bằng nút "Send".
+●	Tương Tác Văn Bản Đến Văn Bản:
+●	Hệ thống nhận văn bản đã chỉnh sửa, sử dụng API hoặc mô hình ngôn ngữ lớn để phân tích và trả lời bằng văn bản tiếng Anh, phù hợp với ngữ cảnh của cuộc đối thoại.
+●	Đưa ra các câu hỏi gợi ý tiếp theo, nhằm thúc đẩy cuộc đối thoại.
+●	Cung cấp chức năng chuyển văn bản thành giọng nói (text-to-speech) để người dùng có thể nghe cách phát âm chuẩn.
+4. Chức năng nâng cao:
+●	Hỗ Trợ Từ Vựng:
+●	Nếu người dùng gặp khó khăn với từ vựng hoặc cách phát âm, có thể sử dụng tính năng tra từ điển tích hợp trong ứng dụng hoặc thông qua Google Translate hoặc API tương tự để dịch và học từ mới.
+●	Tích hợp khả năng nhấn vào từ ngữ trong văn bản để xem nghĩa và cách phát âm.
+5. Yêu cầu kỹ thuật:
+●	Cần tích hợp các API như speech-to-text và text-to-speech từ nhà cung cấp như Google Cloud,.... Hoặc sử dụng source code từ Github
+●	Mô hình ngôn ngữ lớn cho phần tương tác text có thể sử dụng các dịch vụ như OpenAI GPT hoặc tương tự.  Hoặc sử dụng source code tương tự từ Github
+●	Phần mềm cần được thiết kế với giao diện thân thiện với người dùng, dễ dàng điều hướng, và đảm bảo trải nghiệm học tập liền mạch.
+6. Môi trường phát triển:
+●	Có thể phát triển dưới dạng ứng dụng web sử dụng các công nghệ như ReactJS hoặc Angular, hoặc như một ứng dụng di động trên iOS và Android sử dụng Swift hoặc Kotlin.(Gợi ý)
+●	Lưu ý: có thể làm bằng bất cứ nền tảng ngôn ngữ nào
+Phần mềm này nhằm mục tiêu cung cấp một nền tảng học tập tiếng Anh tương tác cao, giúp người dùng cải thiện kỹ năng ngôn ngữ thông qua công nghệ hiện đại và tương tác thực tế.
+Nguồn tham khảo: Github hoặc một số mã nguồn mở khác.
