@@ -1,0 +1,44 @@
+Project: NMCNPM_TiViVu
+
+Stack
+- Frontend: React (Vite) + TailwindCSS
+- Backend: Node.js + Express.js (3-layer: controller → service → repository)
+- Database: PostgreSQL
+- Deployment: Render (both FE and BE on the same platform)
+
+Folder structure
+NMCNPM_TiViVu/
+├─ apps/
+│  ├─ frontend/            (React + Vite + TailwindCSS)
+│  │  ├─ src/
+│  │  ├─ public/
+│  │  └─ .env.example      (VITE_API_BASE_URL)
+│  └─ backend/             (Express.js, 3-layer inside backend)
+│     ├─ src/
+│     │  ├─ controllers/   (handle HTTP requests/validation)
+│     │  ├─ services/      (business logic)
+│     │  ├─ repositories/  (data access to PostgreSQL)
+│     │  ├─ models/        (types/schemas)
+│     │  ├─ routes/        (route definitions)
+│     │  ├─ middlewares/   (auth, logging, error handling)
+│     │  ├─ utils/         (helpers)
+│     │  └─ config/        (env/config loader)
+│     ├─ db/
+│     │  ├─ migrations/    (SQL or tool-based migrations)
+│     │  └─ seed/          (seed data)
+│     ├─ tests/
+│     └─ .env.example      (PORT, DATABASE_URL, NODE_ENV, CORS_ORIGIN)
+├─ infra/
+│  ├─ render/              (Render-specific notes/config if needed)
+│  └─ sql/                 (SQL scripts, e.g., init.sql)
+├─ docs/
+│  └─ architecture.md      (tiers vs layers, deployment notes)
+├─ scripts/                (helper scripts)
+├─ LICENSE
+└─ README.md
+
+Phân biệt Tầng (tiers) và Lớp (layers)
+- Layers (lớp) là cách chia logic trong code (controller/service/repository). Có thể 3 lớp trong 1 ứng dụng backend.
+- Tiers (tầng) là ranh giới triển khai/chạy thực tế, tách nhau qua network: FE (trình duyệt) là 1 tầng, BE (API) là 1 tầng, DB là 1 tầng.
+- Dù FE và BE đều deploy trên cùng nền tảng (Render), chúng vẫn là nhiều tầng khác nhau. Thêm PostgreSQL là tổng 3-tiers.
+- "1 tier, 3 layers" là deploy chung (monolith) nhưng vẫn tách lớp trong code. Với SPA + API + DB, thường là 2 hoặc 3 tiers.
