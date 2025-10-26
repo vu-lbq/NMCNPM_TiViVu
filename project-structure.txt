@@ -33,6 +33,7 @@ NMCNPM_TiViVu/
 │  └─ sql/                 (SQL scripts, e.g., init.sql)
 ├─ docs/
 │  └─ architecture.md      (tiers vs layers, deployment notes)
+│  └─ usecase.md           (actors, use cases, PlantUML diagram)
 ├─ scripts/                (helper scripts)
 ├─ LICENSE
 └─ README.md
