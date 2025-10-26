@@ -1,6 +1,6 @@
 # Use Case Model — Interactive English Learning App
 
-This is a suggested use case model derived from the requirements, plus a few practical additions to improve UX and learning outcomes.
+This is a use case model derived from the requirements, plus a few practical additions to improve UX and learning outcomes.
 
 ## Scope and actors
 

@@ -23,7 +23,3 @@ Notes
 - Keep backend strictly layered: controllers should not call repositories directly; go through services.
 - Define DB access in repositories; keep services stateless and unit-testable.
 - For Tailwind, configure in frontend only (no need on backend).
-
-See also
-
-- Use cases: `docs/usecase.md`
