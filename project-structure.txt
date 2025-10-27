@@ -34,6 +34,7 @@ NMCNPM_TiViVu/
 ├─ docs/
 │  └─ architecture.md      (tiers vs layers, deployment notes)
 │  └─ usecase.md           (actors, use cases, PlantUML diagram)
+│  └─ architecture-diagram.md (Mermaid system architecture diagram)
 ├─ scripts/                (helper scripts)
 ├─ LICENSE
 └─ README.md

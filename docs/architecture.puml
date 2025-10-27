@@ -1,0 +1,114 @@
+@startuml TiViVu_Architecture
+' TiViVu - High-Level Architecture (Initial Draft)
+' This PlantUML component diagram is an initial sketch to guide discussions.
+' No Mermaid as requested.
+
+skinparam componentStyle rectangle
+skinparam wrapWidth 200
+skinparam maxMessageSize 120
+left to right direction
+
+title TiViVu — High-Level Architecture (Initial Draft)
+
+actor "Learner\n(User)" as User
+actor "Admin" as Admin
+
+rectangle "Client" as CLIENT {
+  component "Web App\n(React + Vite + Tailwind)" as Frontend
+  component "Browser APIs\n(Mic, Audio, LocalStorage)" as BrowserAPIs
+}
+
+rectangle "TiViVu System" as SYSTEM {
+  component "API Gateway / Backend\n(Node.js + Express)" as API {
+    component "Auth & Session\n(JWT / Cookies)" as Auth
+    component "Conversation Service\n(context mgmt, prompts)" as ConvSvc
+    component "Vocabulary Service\n(wordbook, quiz)" as VocabSvc
+    component "Media Service\n(upload, presigned URLs)" as MediaSvc
+    component "Provider Abstraction Layer\n(STT/TTS/LLM/Dict/Trans adapters)" as Providers
+    component "WebSocket / SSE\n(real-time updates)" as Realtime
+  }
+
+  database "PostgreSQL\n(users, sessions, messages,\nwords, quizzes)" as DB
+  collections "Object Storage (optional)\n(S3 compatible / CDN)\n(audio recordings, TTS mp3)" as Storage
+  component "Observability\n(logging, metrics, tracing)" as Observability
+}
+
+rectangle "External Providers" as EXTERNAL {
+  component "STT Provider" as STT
+  component "TTS Provider" as TTS
+  component "LLM Service" as LLM
+  component "Dictionary / Pronunciation" as DICT
+  component "Translation Service" as TRANS
+  component "Email/SMS (optional)" as NOTIFY
+  component "OAuth Provider (optional)\n(Google, GitHub)" as OAUTH
+}
+
+' User interactions
+User --> Frontend : Use app via browser
+Admin --> Frontend : Access admin features
+
+' Frontend internal
+Frontend -- BrowserAPIs
+
+' Client ↔ Backend
+Frontend --> API : REST/GraphQL\nSend messages, manage profile\nfetch history, wordbook
+Frontend <--> Realtime : realtime suggestions,\nstreamed responses (SSE/WebSocket)
+Frontend --> Auth : Login/Register/Logout\nJWT refresh
+
+' Backend internals
+Auth -[hidden]-> API
+ConvSvc -[hidden]-> API
+VocabSvc -[hidden]-> API
+Providers -[hidden]-> API
+Realtime -[hidden]-> API
+MediaSvc -[hidden]-> API
+
+API --> DB : CRUD users, sessions,\nmessages, vocabulary
+VocabSvc --> DB
+ConvSvc --> DB
+Auth --> DB
+
+MediaSvc --> Storage : upload/download audio
+
+' Provider calls
+Providers --> STT : audio → text
+Providers --> TTS : text → speech
+Providers --> LLM : prompt → response\n+ suggested questions
+Providers --> DICT : definitions, phonetics
+Providers --> TRANS : translate text
+
+' Auth integrations
+Auth --> OAUTH : Social login (optional)
+Auth --> NOTIFY : OTP / password reset (optional)
+
+' Observability
+API --> Observability : logs, traces, metrics
+Providers --> Observability
+DB --> Observability
+
+' Frontend assets delivery (optional CDN)
+Frontend ..> Storage : fetch media via CDN (public)
+
+' Notes/constraints
+note top of API
+- Node.js + Express 3-layer (controllers/services/repositories)
+- Input validation, rate limiting, CORS
+- Error handling, retries, circuit breakers for providers
+end note
+
+note bottom of DB
+- PostgreSQL via Prisma/pg/knex (TBD)
+- Migrations live in apps/backend/db/migrations
+end note
+
+note right of Frontend
+- React + Vite + Tailwind
+- Env: VITE_API_BASE_URL
+- Fallback to text input if mic/STT fails
+end note
+
+note right of EXTERNAL
+Providers are swappable via adapters.\nSelect at runtime via settings.
+end note
+
+@enduml
