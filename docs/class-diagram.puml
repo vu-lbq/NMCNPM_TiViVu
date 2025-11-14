@@ -1,0 +1,248 @@
+@startuml TiViVu_ClassDiagram
+' Class Diagram for Interactive English Learning App (initial draft)
+' Based on docs/usecase-en.md — No Mermaid, PlantUML only.
+
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 220
+skinparam linetype ortho
+hide empty members
+
+left to right direction
+
+title TiViVu — Core Domain and Service Boundaries (Class Diagram)
+
+package "Domain" {
+  class User <<entity>> {
+    +id: UUID
+    +email: string
+    +name: string
+    +level: string
+    +settings: Settings
+    +createdAt: Date
+    +updatedAt: Date
+  }
+
+  class Settings <<value object>> {
+    +sttProvider: string
+    +ttsProvider: string
+    +llmProvider: string
+    +voice: string
+    +speakingRate: number
+    +privacy: string
+  }
+
+  class Session <<entity>> {
+    +id: UUID
+    +userId: UUID
+    +status: SessionStatus
+    +startedAt: Date
+    +endedAt: Date
+    +contextId: string
+  }
+
+  enum SessionStatus { ACTIVE COMPLETED ABANDONED }
+
+  class Message <<entity>> {
+    +id: UUID
+    +sessionId: UUID
+    +role: MessageRole
+    +text: string
+    +transcript: string
+    +audioUrl: string
+    +createdAt: Date
+  }
+
+  enum MessageRole { user assistant system }
+
+  class Suggestion <<entity>> {
+    +id: UUID
+    +sessionId: UUID
+    +text: string
+    +createdAt: Date
+  }
+
+  class WordbookEntry <<entity>> {
+    +id: UUID
+    +userId: UUID
+    +word: string
+    +definition: string
+    +phonetics: string
+    +examples: string[]
+    +tags: string[]
+    +addedAt: Date
+  }
+
+  class Quiz <<entity>> {
+    +id: UUID
+    +userId: UUID
+    +title: string
+    +scheduledAt: Date
+    +createdAt: Date
+  }
+
+  class QuizItem <<entity>> {
+    +id: UUID
+    +quizId: UUID
+    +wordEntryId: UUID
+    +prompt: string
+    +answer: string
+    +correctCount: int
+    +nextDueAt: Date
+  }
+
+  class DictionaryEntry <<value object>> {
+    +word: string
+    +phonetics: string
+    +definitions: string[]
+    +audioUrl: string
+  }
+
+  class MediaAsset <<entity>> {
+    +id: UUID
+    +ownerId: UUID
+    +type: string
+    +url: string
+    +durationSec: number
+    +createdAt: Date
+  }
+}
+
+package "Providers (Ports)" {
+  interface ISttProvider <<provider>> {
+    +transcribe(audio: MediaAsset, lang: string): string
+  }
+  interface ITtsProvider <<provider>> {
+    +synthesize(text: string, voice: string, rate: number): MediaAsset
+  }
+  interface ILlmProvider <<provider>> {
+    +complete(messages: Message[], settings: Settings): LlmResponse
+  }
+  interface IDictionaryProvider <<provider>> {
+    +lookup(word: string, lang: string): DictionaryEntry
+  }
+  interface ITranslationProvider <<provider>> {
+    +translate(text: string, from: string, to: string): string
+  }
+
+  class LlmResponse <<value object>> {
+    +text: string
+    +suggestedQuestions: string[]
+    +usageTokens: int
+  }
+}
+
+package "Services (Use Case/Application)" {
+  class AuthService <<service>> {
+    +register(email: string, pwd: string): User
+    +login(email: string, pwd: string): TokenPair
+    +logout(userId: UUID): void
+  }
+  class ConversationService <<service>> {
+    +startSession(userId: UUID): Session
+    +sendMessage(sessionId: UUID, textOrAudio: MediaAsset|string): Message
+    +getSuggestions(sessionId: UUID): Suggestion[]
+  }
+  class VocabularyService <<service>> {
+    +saveWord(userId: UUID, entry: WordbookEntry): WordbookEntry
+    +reviewWordbook(userId: UUID): WordbookEntry[]
+    +generateQuiz(userId: UUID): Quiz
+  }
+  class MediaService <<service>> {
+    +uploadAudio(userId: UUID, file: Blob): MediaAsset
+    +getSignedUrl(assetId: UUID): string
+  }
+  class SettingsService <<service>> {
+    +updateSettings(userId: UUID, s: Settings): Settings
+    +getSettings(userId: UUID): Settings
+  }
+
+  class TokenPair <<value object>> {
+    +accessToken: string
+    +refreshToken: string
+  }
+}
+
+package "Repositories (Persistence)" {
+  interface UserRepository {
+    +findByEmail(email: string): User
+    +findById(id: UUID): User
+    +save(user: User): User
+  }
+  interface SessionRepository {
+    +findById(id: UUID): Session
+    +save(s: Session): Session
+  }
+  interface MessageRepository {
+    +listBySession(sessionId: UUID): Message[]
+    +save(m: Message): Message
+  }
+  interface WordbookRepository {
+    +listByUser(userId: UUID): WordbookEntry[]
+    +save(w: WordbookEntry): WordbookEntry
+  }
+  interface QuizRepository {
+    +listByUser(userId: UUID): Quiz[]
+    +save(q: Quiz): Quiz
+    +saveItem(i: QuizItem): QuizItem
+  }
+  interface MediaRepository {
+    +save(a: MediaAsset): MediaAsset
+    +findById(id: UUID): MediaAsset
+  }
+}
+
+' Relationships (Domain)
+User "1" -- "*" Session : owns >
+Session "1" -- "*" Message : contains >
+Session "1" -- "*" Suggestion : derives >
+User "1" -- "*" WordbookEntry : saves >
+User "1" -- "*" Quiz : has >
+Quiz "1" -- "*" QuizItem : includes >
+WordbookEntry "1" -- "0..1" DictionaryEntry : enriches >
+MediaAsset "0..*" ..> Message : referenced by
+
+' Services ↔ Domain/Providers/Repositories
+ConversationService ..> ISttProvider : uses
+ConversationService ..> ITtsProvider : uses
+ConversationService ..> ILlmProvider : uses
+ConversationService ..> SessionRepository : uses
+ConversationService ..> MessageRepository : uses
+ConversationService ..> SettingsService : uses
+
+VocabularyService ..> IDictionaryProvider : uses
+VocabularyService ..> ITranslationProvider : uses
+VocabularyService ..> WordbookRepository : uses
+VocabularyService ..> QuizRepository : uses
+
+MediaService ..> MediaRepository : uses
+
+AuthService ..> UserRepository : uses
+SettingsService ..> UserRepository : uses
+
+' Notes mapping to use cases
+note right of ConversationService
+Supports:
+- Start Conversation Session
+- Capture Voice Input
+- STT Transcription
+- Send Message
+- Receive LLM Response
+- Get Suggested Next Questions
+- Play Response via TTS
+end note
+
+note right of VocabularyService
+Supports:
+- Tap Word to View Meaning/Pronunciation
+- Translate Selected Text
+- Save Word to Personal Wordbook
+- Review Vocabulary (flashcards/quiz)
+end note
+
+note right of AuthService
+Supports:
+- Register / Login / Logout
+- Manage Profile (via UserRepository)
+end note
+
+@enduml

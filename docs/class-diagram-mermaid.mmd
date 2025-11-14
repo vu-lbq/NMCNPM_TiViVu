@@ -1,0 +1,252 @@
+---
+config:
+  theme: default
+  layout: dagre
+---
+classDiagram
+  direction LR
+
+  namespace Domain {
+    class User {
+      +UUID id
+      +string email
+      +string name
+      +string level
+      +Settings settings
+      +Date createdAt
+      +Date updatedAt
+    }
+
+    class Settings {
+      +string sttProvider
+      +string ttsProvider
+      +string llmProvider
+      +string voice
+      +number speakingRate
+      +string privacy
+    }
+
+    class Session {
+      +UUID id
+      +UUID userId
+      +SessionStatus status
+      +Date startedAt
+      +Date endedAt
+      +string contextId
+    }
+
+    class SessionStatus {
+      ACTIVE
+      COMPLETED
+      ABANDONED
+    }
+
+    class Message {
+      +UUID id
+      +UUID sessionId
+      +MessageRole role
+      +string text
+      +string transcript
+      +string audioUrl
+      +Date createdAt
+    }
+
+    class MessageRole {
+      user
+      assistant
+      system
+    }
+
+    class Suggestion {
+      +UUID id
+      +UUID sessionId
+      +string text
+      +Date createdAt
+    }
+
+    class WordbookEntry {
+      +UUID id
+      +UUID userId
+      +string word
+      +string definition
+      +string phonetics
+      +string[] examples
+      +string[] tags
+      +Date addedAt
+    }
+
+    class Quiz {
+      +UUID id
+      +UUID userId
+      +string title
+      +Date scheduledAt
+      +Date createdAt
+    }
+
+    class QuizItem {
+      +UUID id
+      +UUID quizId
+      +UUID wordEntryId
+      +string prompt
+      +string answer
+      +int correctCount
+      +Date nextDueAt
+    }
+
+    class DictionaryEntry {
+      +string word
+      +string phonetics
+      +string[] definitions
+      +string audioUrl
+    }
+
+    class MediaAsset {
+      +UUID id
+      +UUID ownerId
+      +string type
+      +string url
+      +number durationSec
+      +Date createdAt
+    }
+  }
+
+  namespace Providers_Ports {
+    class ISttProvider {
+      +string transcribe(MediaAsset audio, string lang)
+    }
+
+    class ITtsProvider {
+      +MediaAsset synthesize(string text, string voice, number rate)
+    }
+
+    class ILlmProvider {
+      +LlmResponse complete(Message[] messages, Settings settings)
+    }
+
+    class IDictionaryProvider {
+      +DictionaryEntry lookup(string word, string lang)
+    }
+
+    class ITranslationProvider {
+      +string translate(string text, string from, string to)
+    }
+
+    class LlmResponse {
+      +string text
+      +string[] suggestedQuestions
+      +int usageTokens
+    }
+  }
+
+  namespace Services_UseCase_Application {
+    class AuthService {
+      +User register(string email, string pwd)
+      +TokenPair login(string email, string pwd)
+      +void logout(UUID userId)
+    }
+    class ConversationService {
+      +Session startSession(UUID userId)
+      +Message sendMessage(UUID sessionId, any textOrAudio)
+      +Suggestion[] getSuggestions(UUID sessionId)
+    }
+    class VocabularyService {
+      +WordbookEntry saveWord(UUID userId, WordbookEntry entry)
+      +WordbookEntry[] reviewWordbook(UUID userId)
+      +Quiz generateQuiz(UUID userId)
+    }
+    class MediaService {
+      +MediaAsset uploadAudio(UUID userId, Blob file)
+      +string getSignedUrl(UUID assetId)
+    }
+    class SettingsService {
+      +Settings updateSettings(UUID userId, Settings s)
+      +Settings getSettings(UUID userId)
+    }
+
+    class TokenPair {
+      +string accessToken
+      +string refreshToken
+    }
+  }
+
+  namespace Repositories_Persistence {
+    class UserRepository {
+      +User findByEmail(string email)
+      +User findById(UUID id)
+      +User save(User user)
+    }
+
+    class SessionRepository {
+      +Session findById(UUID id)
+      +Session save(Session s)
+    }
+
+    class MessageRepository {
+      +Message[] listBySession(UUID sessionId)
+      +Message save(Message m)
+    }
+
+    class WordbookRepository {
+      +WordbookEntry[] listByUser(UUID userId)
+      +WordbookEntry save(WordbookEntry w)
+    }
+
+    class QuizRepository {
+      +Quiz[] listByUser(UUID userId)
+      +Quiz save(Quiz q)
+      +QuizItem saveItem(QuizItem i)
+    }
+
+    class MediaRepository {
+      +MediaAsset save(MediaAsset a)
+      +MediaAsset findById(UUID id)
+    }
+  }
+
+  %% Relationships (Domain)
+  Domain.User "1" -- "*" Domain.Session : owns
+  Domain.Session "1" -- "*" Domain.Message : contains
+  Domain.Session "1" -- "*" Domain.Suggestion : derives
+  Domain.User "1" -- "*" Domain.WordbookEntry : saves
+  Domain.User "1" -- "*" Domain.Quiz : has
+  Domain.Quiz "1" -- "*" Domain.QuizItem : includes
+  Domain.WordbookEntry "1" -- "0..1" Domain.DictionaryEntry : enriches
+  Domain.MediaAsset "0..*" ..> Domain.Message : referenced by
+
+  %% Service dependencies
+  Services_UseCase_Application.ConversationService ..> Providers_Ports.ISttProvider : uses
+  Services_UseCase_Application.ConversationService ..> Providers_Ports.ITtsProvider : uses
+  Services_UseCase_Application.ConversationService ..> Providers_Ports.ILlmProvider : uses
+  Services_UseCase_Application.ConversationService ..> Repositories_Persistence.SessionRepository : uses
+  Services_UseCase_Application.ConversationService ..> Repositories_Persistence.MessageRepository : uses
+  Services_UseCase_Application.ConversationService ..> Services_UseCase_Application.SettingsService : uses
+
+  Services_UseCase_Application.VocabularyService ..> Providers_Ports.IDictionaryProvider : uses
+  Services_UseCase_Application.VocabularyService ..> Providers_Ports.ITranslationProvider : uses
+  Services_UseCase_Application.VocabularyService ..> Repositories_Persistence.WordbookRepository : uses
+  Services_UseCase_Application.VocabularyService ..> Repositories_Persistence.QuizRepository : uses
+
+  Services_UseCase_Application.MediaService ..> Repositories_Persistence.MediaRepository : uses
+
+  Services_UseCase_Application.AuthService ..> Repositories_Persistence.UserRepository : uses
+  Services_UseCase_Application.SettingsService ..> Repositories_Persistence.UserRepository : uses
+
+  %% Notes mapping to use cases (converted to comments for compatibility)
+  %% ConversationService supports:
+  %% - Start Conversation Session
+  %% - Capture Voice Input
+  %% - STT Transcription
+  %% - Send Message
+  %% - Receive LLM Response
+  %% - Get Suggested Next Questions
+  %% - Play Response via TTS
+
+  %% VocabularyService supports:
+  %% - Tap Word to View Meaning/Pronunciation
+  %% - Translate Selected Text
+  %% - Save Word to Personal Wordbook
+  %% - Review Vocabulary (flashcards/quiz)
+
+  %% AuthService supports:
+  %% - Register / Login / Logout
+  %% - Manage Profile (via UserRepository)

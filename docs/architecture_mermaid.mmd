@@ -1,0 +1,69 @@
+---
+config:
+  theme: default
+  layout: elk
+---
+flowchart LR
+  %% Actors
+  User(("Learner (User)"))
+  Admin(("Admin"))
+
+  subgraph Client
+    Frontend["Web App (React + Vite + Tailwind)"]
+    BrowserAPIs["Browser APIs (Mic, Audio, LocalStorage)"]
+  end
+
+  subgraph "TiViVu System"
+    subgraph API["API Gateway / Backend (Node.js + Express)"]
+      Auth["Auth & Session (JWT / Cookies)"]
+      ConvSvc["Conversation Service (context mgmt, prompts)"]
+      VocabSvc["Vocabulary Service (wordbook, quiz)"]
+      MediaSvc["Media Service (upload, presigned URLs)"]
+      Providers["Provider Abstraction Layer (STT/TTS/LLM/Dict/Trans adapters)"]
+      Realtime["WebSocket / SSE (real-time updates)"]
+    end
+    DB[("PostgreSQL\n(users, sessions, messages,\nwords, quizzes)")]
+    Storage[("Object Storage optional\n(S3 compatible / CDN)\n(audio recordings, TTS mp3)")]
+    Observability["Observability (logging, metrics, tracing)"]
+  end
+
+  subgraph "External Providers"
+    STT["STT Provider"]
+    TTS["TTS Provider"]
+    LLM["LLM Service"]
+    DICT["Dictionary / Pronunciation"]
+    TRANS["Translation Service"]
+    NOTIFY["Email/SMS optional"]
+    OAUTH["OAuth Provider optional\n(Google, GitHub)"]
+  end
+
+  %% Interactions
+  User -->|Use app via browser| Frontend
+  Admin -->|Access admin features| Frontend
+  Frontend --- BrowserAPIs
+
+  Frontend -->|REST/GraphQL\nSend messages, manage profile\nfetch history, wordbook| API
+  Frontend <--> |SSE/WebSocket\nrealtime suggestions, streams| Realtime
+  Frontend -->|Login/Register/Logout\nJWT refresh| Auth
+
+  API -->|CRUD users, sessions,\nmessages, vocabulary| DB
+  VocabSvc --> DB
+  ConvSvc --> DB
+  Auth --> DB
+
+  MediaSvc -->|upload/download audio| Storage
+
+  Providers -->|audio to text| STT
+  Providers -->|text to speech| TTS
+  Providers -->|prompt to response\n+ suggested questions| LLM
+  Providers -->|definitions, phonetics| DICT
+  Providers -->|translate text| TRANS
+
+  Auth -->|Social login optional| OAUTH
+  Auth -->|OTP / password reset optional| NOTIFY
+
+  API --> Observability
+  Providers --> Observability
+  DB --> Observability
+
+  Frontend -.->|fetch media via CDN public| Storage

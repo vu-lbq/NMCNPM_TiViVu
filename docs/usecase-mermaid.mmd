@@ -1,0 +1,95 @@
+---
+config:
+  theme: default
+  layout: elk
+---
+flowchart LR
+  %% Approximation of UML Use Case Diagram (Mermaid lacks native use case support)
+  %% Actors
+  User((Learner))
+  Admin((Admin))
+  STT((STT Provider))
+  TTS((TTS Provider))
+  LLM((LLM Service))
+  Dict((Dictionary Service))
+  Trans((Translation Service))
+
+  %% System boundary as subgraph
+  subgraph System[English Learning App]
+    Register([Register])
+    Login([Login])
+    Logout([Logout])
+    ManageProfile([Manage Profile])
+    StartConversation([Start Conversation])
+    CaptureVoice([Capture Voice])
+    STTTranscription([STT Transcription])
+    EditTranscription([Edit Transcription])
+    SendMessage([Send Message])
+    GetLLMResponse([Get LLM Response])
+    SuggestNextQuestions([Suggest Next Questions])
+    PlayResponse([Play Response])
+    TTSSynthesis([TTS Synthesis])
+    TapWord([Tap Word])
+    GetDefinition([Get Definition/Pronunciation])
+    TranslateText([Translate Text])
+    SaveWord([Save Word])
+    ReviewVocabulary([Review Vocabulary])
+    ViewHistory([View Conversation History])
+    Settings([Settings])
+    Feedback([Feedback / Report Issue])
+
+    ManagePrompts([Manage Prompts/Templates])
+    MonitorUsage([Monitor Usage/Analytics])
+    ManageUsers([Manage Users])
+    ManageContent([Manage Content/Glossary])
+  end
+
+  %% Actor associations
+  User --> Register
+  User --> Login
+  User --> Logout
+  User --> ManageProfile
+  User --> StartConversation
+  User --> CaptureVoice
+  User --> EditTranscription
+  User --> SendMessage
+  User --> PlayResponse
+  User --> TapWord
+  User --> TranslateText
+  User --> SaveWord
+  User --> ReviewVocabulary
+  User --> ViewHistory
+  User --> Settings
+  User --> Feedback
+
+  Admin --> ManagePrompts
+  Admin --> MonitorUsage
+  Admin --> ManageUsers
+  Admin --> ManageContent
+
+  %% External service associations (treated as actors)
+  STT --> STTTranscription
+  TTS --> TTSSynthesis
+  LLM --> GetLLMResponse
+  Dict --> GetDefinition
+  Trans --> TranslateText
+
+  %% Include relationships (solid arrow with label)
+  StartConversation -->|include| CaptureVoice
+  CaptureVoice -->|include| STTTranscription
+  SendMessage -->|include| GetLLMResponse
+  GetLLMResponse -->|include| SuggestNextQuestions
+  PlayResponse -->|include| TTSSynthesis
+  TapWord -->|include| GetDefinition
+  ReviewVocabulary -->|include| SaveWord
+
+  %% Extend relationships (dashed arrow with label)
+  EditTranscription -.->|extend| STTTranscription
+  TapWord -.->|extend| TranslateText
+  SaveWord -.->|extend| TapWord
+  Login -.->|extend| Register
+  Logout -.->|extend| Login
+
+  %% Notes
+  %% Latency targets: STT 1-2s, LLM 2-4s, TTS 1-2s
+  %% Fallbacks: manual text input if STT fails; text display if TTS fails
