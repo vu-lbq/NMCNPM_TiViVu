@@ -3,6 +3,7 @@ const router = express.Router();
 const controller = require('../controllers/controller');
 const authController = require('../controllers/authController');
 const { authenticate } = require('../middlewares/auth');
+const conversationRouter = require('./conversationRouter');
 
 router.get('/status', (req, res) => {
   res.send('API is running');
@@ -18,5 +19,8 @@ router.get('/login', controller.getLogin);
 router.post('/login', authController.postLogin);
 router.post('/register', authController.postRegister);
 router.get('/me', authenticate, authController.getMe);
+
+// Conversations + Messages API (protected)
+router.use('/conversations', conversationRouter);
 
 module.exports = router;
