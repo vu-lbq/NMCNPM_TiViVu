@@ -1,23 +1,21 @@
+"use strict";
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-const User = require('./User')(sequelize, DataTypes);
-const Conversation = require('./Conversation')(sequelize, DataTypes);
-const Message = require('./Message')(sequelize, DataTypes);
+const models = {};
 
-// Associations (minimal)
-User.hasMany(Conversation, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' });
-Conversation.belongsTo(User);
+models.User = require('./User')(sequelize, DataTypes);
+models.Conversation = require('./Conversation')(sequelize, DataTypes);
+models.Message = require('./Message')(sequelize, DataTypes);
 
-Conversation.hasMany(Message, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' });
-Message.belongsTo(Conversation);
-
-User.hasMany(Message, { foreignKey: { allowNull: false }, onDelete: 'CASCADE' });
-Message.belongsTo(User);
+// Run associate methods defined on each model
+Object.values(models).forEach((model) => {
+  if (typeof model.associate === 'function') {
+    model.associate(models);
+  }
+});
 
 module.exports = {
   sequelize,
-  User,
-  Conversation,
-  Message
+  ...models
 };

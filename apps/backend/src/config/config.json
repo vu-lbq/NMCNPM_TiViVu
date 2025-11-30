@@ -2,7 +2,7 @@
   "development": {
     "username": "postgres",
     "password": "postgres",
-    "database": "postgres",
+    "database": "TiViVu",
     "host": "localhost",
     "dialect": "postgres",
     "port": 5432
@@ -10,14 +10,14 @@
   "test": {
     "username": "postgres",
     "password": "postgres",
-    "database": "kcpm_nodejs2",
+    "database": "TiViVu",
     "host": "localhost",
     "dialect": "postgres"
   },
   "production": {
     "username": "rblhyqcf",
     "password": "haKazCS8aT2PDdTfDDVouEDUeo5x_Q9B",
-    "database": "rblhyqcf",
+    "database": "TiViVu",
     "host": "mahmud.db.elephantsql.com",
     "dialect": "postgres",
     "dialectOptions": {
