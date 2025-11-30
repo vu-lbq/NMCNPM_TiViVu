@@ -1,0 +1,26 @@
+{
+  "name": "tivivu",
+  "version": "1.0.0",
+  "description": "tivivu English AI app",
+  "main": "server.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "test",
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "tivivu",
+    "backend"
+  ],
+  "author": "tivivu",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "devenv": "^1.0.1",
+    "express": "^5.1.0",
+    "morgan": "^1.10.1"
+  }
+}
