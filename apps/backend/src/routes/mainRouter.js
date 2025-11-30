@@ -5,6 +5,7 @@ const authController = require('../controllers/authController');
 const { authenticate } = require('../middlewares/auth');
 const conversationRouter = require('./conversationRouter');
 const aiController = require('../controllers/aiController');
+const voiceController = require('../controllers/voiceController');
 
 router.get('/status', (req, res) => {
   res.send('API is running');
@@ -26,5 +27,9 @@ router.use('/conversations', conversationRouter);
 
 // Simple AI ping test (unprotected; add auth if desired)
 router.get('/ai/test', aiController.test);
+
+// TTS/STT endpoints
+router.post('/tts', voiceController.textToSpeech);
+router.post('/stt', voiceController.speechToText);
 
 module.exports = router;

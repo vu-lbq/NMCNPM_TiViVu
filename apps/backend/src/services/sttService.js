@@ -1,0 +1,25 @@
+const fs = require('fs');
+
+// Uses OpenAI Whisper (`whisper-1`) transcription via the Audio API
+async function transcribe({ filePath, openaiClient, model = 'whisper-1', language }) {
+  if (!openaiClient) throw new Error('OpenAI client not configured');
+  if (!filePath || !fs.existsSync(filePath)) throw new Error('Audio file missing');
+  try {
+    if (openaiClient.audio && openaiClient.audio.transcriptions && typeof openaiClient.audio.transcriptions.create === 'function') {
+      const file = fs.createReadStream(filePath);
+      const resp = await openaiClient.audio.transcriptions.create({
+        file,
+        model,
+        language,
+      });
+      // OpenAI SDK returns an object with `text`
+      return { text: resp.text || resp?.data?.text || '' };
+    }
+    // Fallback: just say unsupported
+    return { text: '[stt unavailable: install OpenAI audio API]' };
+  } catch (err) {
+    throw err;
+  }
+}
+
+module.exports = { transcribe };

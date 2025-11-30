@@ -11,7 +11,9 @@ app.use(cors());
 app.use(morgan('dev'));
 
 // cau hinh express de phan tich body cua yeu cau dang JSON
-app.use(express.json());
+// Increase body size limit to handle base64 audio uploads (e.g., ~10MB)
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: process.env.URLENCODED_BODY_LIMIT || '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // routes
