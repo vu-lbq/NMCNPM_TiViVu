@@ -1,6 +1,7 @@
 "use strict";
 
 const { Message, Conversation } = require('../models');
+const { generateAssistantReply } = require('../services/aiService');
 
 exports.listMessages = async (req, res, next) => {
   try {
@@ -18,8 +19,17 @@ exports.postMessage = async (req, res, next) => {
     const { content } = req.body || {};
     if (!content) return res.status(400).json({ message: 'content is required' });
     const userMsg = await Message.create({ role: 'user', content, conversationId: convo.id, userId: req.user.id });
-    // Stub assistant reply. Replace with AI integration later.
-    const assistantMsg = await Message.create({ role: 'assistant', content: 'This is a stubbed assistant reply.', conversationId: convo.id, userId: req.user.id });
+
+    // Generate assistant reply via OpenAI
+    let replyText = '';
+    try {
+      replyText = await generateAssistantReply(convo.id, content);
+    } catch (aiErr) {
+      // Fall back gracefully if AI call fails
+      replyText = 'Sorry, I could not generate a reply right now.';
+    }
+
+    const assistantMsg = await Message.create({ role: 'assistant', content: replyText, conversationId: convo.id, userId: req.user.id });
     res.status(201).json({ userMessage: userMsg, assistantMessage: assistantMsg });
   } catch (err) { next(err); }
 };
