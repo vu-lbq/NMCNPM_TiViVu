@@ -15,13 +15,14 @@ module.exports = {
 			// 1) Users
 			const userIds = [];
 			const users = [];
+			const bcrypt = require('bcryptjs');
 			for (let i = 1; i <= 5; i++) {
 				const id = randomUUID();
 				userIds.push(id);
 				users.push({
 					id,
 					username: `user${i}`,
-					passwordHash: `pass${i}`,
+					passwordHash: bcrypt.hashSync(`pass${i}`, 10),
 					displayName: `User ${i}`,
 					createdAt: now,
 					updatedAt: now,
