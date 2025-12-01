@@ -6,6 +6,7 @@ const { authenticate } = require('../middlewares/auth');
 const conversationRouter = require('./conversationRouter');
 const aiController = require('../controllers/aiController');
 const voiceController = require('../controllers/voiceController');
+const nlpController = require('../controllers/nlpController');
 
 router.get('/status', (req, res) => {
   res.send('API is running');
@@ -29,7 +30,11 @@ router.use('/conversations', conversationRouter);
 router.get('/ai/test', aiController.test);
 
 // TTS/STT endpoints
-router.post('/tts', voiceController.textToSpeech);
-router.post('/stt', voiceController.speechToText);
+router.post('/tts', authenticate, voiceController.textToSpeech);
+router.post('/stt', authenticate, voiceController.speechToText);
+
+// Translation and dictionary
+router.post('/translate', authenticate, nlpController.translateText);
+router.get('/vocab/define', authenticate, nlpController.defineWord);
 
 module.exports = router;
