@@ -14,7 +14,6 @@ const MessageBubble = ({ text, role, onWordClick, onSpeak }) => {
           isUser ? "flex-row-reverse" : "flex-row"
         }`}
       >
-        {/* Avatar: User dùng màu 00BDB6, Bot dùng 1D2957 */}
         <div
           className={`
           w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm text-white

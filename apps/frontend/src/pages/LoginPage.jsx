@@ -6,14 +6,13 @@ const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // State mới
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Logic kiểm tra Confirm Password khi Đăng ký
     if (!isLogin && password !== confirmPassword) {
       setError("Mật khẩu xác nhận không khớp!");
       return;
@@ -28,9 +27,8 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 border-t-4 border-[#00BDB6]">
-        {/* Màu chủ đạo 1D2957 cho tiêu đề */}
         <h1 className="text-3xl font-bold text-center text-[#1D2957] mb-2">
-          TiViVu
+          Ti<span className="text-[#00BDB6]">Vi</span>Vu
         </h1>
         <p className="text-center text-gray-500 mb-8">
           English Learning Assistant
@@ -68,7 +66,6 @@ const LoginPage = () => {
             />
           </div>
 
-          {/* Trường Confirm Password chỉ hiện khi Register */}
           {!isLogin && (
             <div className="animate-in fade-in slide-in-from-top-2">
               <label className="block text-sm font-medium text-[#1D2957] mb-1">
@@ -84,7 +81,6 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* Nút bấm dùng màu chủ đạo 00BDB6 */}
           <button
             type="submit"
             disabled={loading}
