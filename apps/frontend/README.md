@@ -1,22 +1,18 @@
-# Frontend (React + Vite + TailwindCSS)
+# React + Vite
 
-Structure
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-- `src/`: application source code
-- `public/`: static assets
-- `.env.example`: example env file
+Currently, two official plugins are available:
 
-Environment
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-- `VITE_API_BASE_URL`: Base URL of the backend API (e.g., <https://your-api.onrender.com>)
+## React Compiler
 
-Tailwind quick notes
+The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
 
-- Install Tailwind and PostCSS, generate `tailwind.config.js` and `postcss.config.js`.
-- Add `@tailwind base; @tailwind components; @tailwind utilities;` in `src/index.css`.
+Note: This will impact Vite dev & build performances.
 
-Render (Static Site)
+## Expanding the ESLint configuration
 
-- Build Command: `npm ci && npm run build`
-- Publish Directory: `dist`
-- Environment: set `VITE_API_BASE_URL` to your backend URL.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
