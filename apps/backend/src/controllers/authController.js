@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
 function signToken(user) {
-  const payload = { sub: user.id, username: user.username };
+  const payload = { sub: user.id, email: user.username };
   const secret = process.env.JWT_SECRET || 'dev_secret_change_me';
   const expiresIn = process.env.JWT_EXPIRES_IN || '1h';
   return jwt.sign(payload, secret, { expiresIn });
@@ -13,18 +13,19 @@ function signToken(user) {
 
 exports.postRegister = async (req, res, next) => {
   try {
-    const { username, password, displayName } = req.body || {};
+    const { email, password, displayName } = req.body || {};
+    const username = (email || '').trim();
     if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
     const existing = await User.findOne({ where: { username } });
     if (existing) {
-      return res.status(409).json({ message: 'Username already exists' });
+      return res.status(409).json({ message: 'Email already exists' });
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({ username, passwordHash, displayName });
     const token = signToken(user);
-    return res.status(201).json({ message: 'Registered', accessToken: token, user: { id: user.id, username: user.username, displayName: user.displayName } });
+    return res.status(201).json({ message: 'Registered', token, accessToken: token, user: { id: user.id, email: user.username, displayName: user.displayName } });
   } catch (err) {
     next(err);
   }
@@ -32,9 +33,10 @@ exports.postRegister = async (req, res, next) => {
 
 exports.postLogin = async (req, res, next) => {
   try {
-    const { username, password } = req.body || {};
+    const { email, password } = req.body || {};
+    const username = (email || '').trim();
     if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
     const user = await User.findOne({ where: { username } });
     if (!user) {
@@ -45,7 +47,7 @@ exports.postLogin = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     const token = signToken(user);
-    return res.status(200).json({ message: 'Login successful', accessToken: token, user: { id: user.id, username: user.username, displayName: user.displayName } });
+    return res.status(200).json({ message: 'Login successful', token, accessToken: token, user: { id: user.id, email: user.username, displayName: user.displayName } });
   } catch (err) {
     next(err);
   }

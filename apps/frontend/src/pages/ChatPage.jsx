@@ -21,6 +21,7 @@ const ChatPage = () => {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
   const [selectedWord, setSelectedWord] = useState(null);
   const messagesEndRef = useRef(null);
 
@@ -32,6 +33,14 @@ const ChatPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const ensureConversation = async () => {
+    if (conversationId) return conversationId;
+    const convo = await chatService.createConversation("New Chat");
+    const cid = convo?.id || convo?.conversation?.id || null;
+    setConversationId(cid);
+    return cid;
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isProcessing) return;
 
@@ -42,11 +51,14 @@ const ChatPage = () => {
     setIsProcessing(true);
 
     try {
-      const botResponse = await chatService.sendMessage(
-        "current_chat_id",
-        userMsg.text
-      );
-      setMessages((prev) => [...prev, botResponse]);
+      const cid = await ensureConversation();
+      const result = await chatService.sendMessage(cid, userMsg.text);
+      const assistant = result?.assistantMessage || result?.assistant || result?.bot;
+      const replyText = assistant?.content || assistant?.text || "";
+      setMessages((prev) => [
+        ...prev,
+        { text: replyText, role: "bot", timestamp: new Date() },
+      ]);
     } catch (error) {
       console.error("Chat error:", error);
     } finally {
@@ -54,8 +66,10 @@ const ChatPage = () => {
     }
   };
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
     setMessages([]);
+    setConversationId(null);
+    await ensureConversation();
   };
 
   return (
@@ -65,7 +79,7 @@ const ChatPage = () => {
           {messages.length === 0 ? (
             <div className="text-center opacity-60 mb-20">
               <h2 className="text-3xl font-bold text-[#1D2957] mb-3">
-                Hello, {user?.name}
+                Hello, {user?.email || user?.username || "Learner"}
               </h2>
               <p className="text-gray-600">
                 Start speaking to practice your English!

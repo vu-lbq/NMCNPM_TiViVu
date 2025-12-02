@@ -1,78 +1,89 @@
-// Giả lập độ trễ mạng
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+// Backend API integration
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
-// Mock Database trong localStorage để dữ liệu không mất khi reload
-const getDb = () =>
-  JSON.parse(localStorage.getItem("tivivu_db") || '{"users":[], "chats":[]}');
-const saveDb = (db) => localStorage.setItem("tivivu_db", JSON.stringify(db));
+function getToken() {
+  try {
+    const stored = localStorage.getItem('tivivu_user');
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    return parsed?.token || null;
+  } catch {
+    return null;
+  }
+}
+
+async function handleResponse(res) {
+  if (!res.ok) {
+    let msg = await res.text();
+    try { const j = JSON.parse(msg); msg = j.error || j.message || msg; } catch {}
+    throw new Error(msg || `HTTP ${res.status}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  return res.text();
+}
 
 export const authService = {
+  // Frontend uses email; backend expects username.
   login: async (email, password) => {
-    await delay(800);
-    // Logic giả: Cứ nhập là vào, nhưng kiểm tra email format
-    if (!email.includes("@")) throw new Error("Invalid email format");
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await handleResponse(res);
     return {
-      id: "user_123",
+      id: data.user?.id || data.id || null,
       email,
-      name: email.split("@")[0],
-      token: "fake_jwt_token",
+      token: data.token,
     };
   },
-
   register: async (email, password) => {
-    await delay(800);
+    const res = await fetch(`${API_BASE}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await handleResponse(res);
     return {
-      id: "user_new",
+      id: data.user?.id || data.id || null,
       email,
-      name: email.split("@")[0],
-      token: "fake_jwt_token",
+      token: data.token,
     };
-  },
+  }
 };
 
 export const chatService = {
-  getHistory: async (userId) => {
-    await delay(500);
-    const db = getDb();
-    // Lọc chat của user (Mock)
-    return db.chats.filter((c) => c.userId === userId) || [];
+  listConversations: async () => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/conversations`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return handleResponse(res);
   },
-
-  createConversation: async (userId) => {
-    await delay(300);
-    const newChat = {
-      id: "chat_" + Date.now(),
-      userId,
-      title: "New Conversation",
-      messages: [],
-      createdAt: new Date().toISOString(),
-    };
-    // Lưu vào mock db (chỉ demo memory)
-    // const db = getDb(); db.chats.push(newChat); saveDb(db);
-    return newChat;
+  createConversation: async (title = 'New Conversation') => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/conversations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ title })
+    });
+    return handleResponse(res);
   },
-
-  sendMessage: async (conversationId, message) => {
-    await delay(1000); // Giả lập AI đang suy nghĩ
-
-    // Logic AI đơn giản
-    let botResponse = "I hear you. Please go on.";
-    const lowerMsg = message.toLowerCase();
-
-    if (lowerMsg.includes("hello"))
-      botResponse =
-        "Hello! I am TiViVu AI. How can I help you learn English today?";
-    else if (lowerMsg.includes("grammar"))
-      botResponse =
-        "Grammar is tricky! Try saying a sentence and I will fix it for you.";
-    else if (lowerMsg.includes("vocab"))
-      botResponse =
-        "Vocabulary is key. Click on any word in our chat to see its dictionary definition!";
-
-    return {
-      text: botResponse,
-      role: "bot",
-      timestamp: new Date().toISOString(),
-    };
+  listMessages: async (conversationId) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/conversations/${conversationId}/messages`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return handleResponse(res);
   },
+  sendMessage: async (conversationId, content) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ content })
+    });
+    return handleResponse(res);
+  }
 };

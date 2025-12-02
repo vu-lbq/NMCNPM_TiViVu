@@ -6,7 +6,7 @@ module.exports = {
   development: {
     username: 'postgres',
     password: 'postgres',
-    database: 'TiViVu', // change to 'tivivu_dev' if desired
+    database: 'TiViVu',
     host: 'localhost',
     port: 5432,
     dialect: 'postgres'

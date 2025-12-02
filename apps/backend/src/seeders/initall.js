@@ -16,12 +16,14 @@ module.exports = {
 			const userIds = [];
 			const users = [];
 			const bcrypt = require('bcryptjs');
+			const domain = 'gmail.com';
 			for (let i = 1; i <= 5; i++) {
 				const id = randomUUID();
 				userIds.push(id);
 				users.push({
 					id,
-					username: `user${i}`,
+					// Store email in username field (backend treats username as email)
+					username: `user${i}@${domain}`,
 					passwordHash: bcrypt.hashSync(`pass${i}`, 10),
 					displayName: `User ${i}`,
 					createdAt: now,
