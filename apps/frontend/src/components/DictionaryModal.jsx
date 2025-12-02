@@ -1,5 +1,6 @@
-import React from "react";
-import { X, BookOpen, Globe } from "lucide-react";
+import React, { useState } from "react";
+import { X, BookOpen, Globe, BookmarkPlus } from "lucide-react";
+import { vocabService } from "../services/api";
 // đây là component hiển thị modal từ điển khi người dùng chọn một từ
 // nó cung cấp các liên kết đến các nguồn từ điển và dịch thuật phổ biến
 // hàm để phát hiện ngôn ngữ của từ đã chọn
@@ -48,6 +49,7 @@ function buildLinks(text) {
 }
 
 const DictionaryModal = ({ word, onClose }) => {
+  const [saving, setSaving] = useState(false);
   if (!word) return null;
   const links = buildLinks(word);
   const tokens = String(word || "").trim().split(/\s+/).filter(Boolean);
@@ -87,6 +89,21 @@ const DictionaryModal = ({ word, onClose }) => {
             </a>
           ))}
         </div>
+        <button
+          onClick={async () => {
+            try {
+              setSaving(true);
+              await vocabService.add({ word: String(word).trim(), lang: detectLang(word), source: 'dictionary' });
+              onClose?.();
+            } catch {
+              setSaving(false);
+            }
+          }}
+          disabled={saving}
+          className={`mt-4 w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${saving ? 'bg-gray-200 text-gray-400' : 'bg-[#00BDB6] text-white hover:bg-[#00a8a2]'}`}
+        >
+          <BookmarkPlus size={16} /> {saving ? 'Saving...' : 'Save to Vocabulary'}
+        </button>
         {showCambridgeHint && (
           <p className="text-xs text-gray-400 mt-2">Cambridge only supports single English words.</p>
         )}

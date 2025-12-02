@@ -7,6 +7,7 @@ const conversationRouter = require('./conversationRouter');
 const aiController = require('../controllers/aiController');
 const voiceController = require('../controllers/voiceController');
 const nlpController = require('../controllers/nlpController');
+const vocabController = require('../controllers/vocabController');
 
 router.get('/status', (req, res) => {
   res.send('API is running');
@@ -37,5 +38,10 @@ router.post('/voice-chat', authenticate, voiceController.voiceChat);
 // Translation and dictionary
 router.post('/translate', authenticate, nlpController.translateText);
 router.get('/vocab/define', authenticate, nlpController.defineWord);
+
+// Vocabulary save/list/remove
+router.get('/vocab', authenticate, vocabController.listVocab);
+router.post('/vocab', authenticate, vocabController.addVocab);
+router.delete('/vocab/:id', authenticate, vocabController.removeVocab);
 
 module.exports = router;

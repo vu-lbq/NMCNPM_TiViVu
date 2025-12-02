@@ -127,4 +127,32 @@ export const voiceService = {
     });
     return handleResponse(res); // { transcript, replyText, audioBase64, contentType, conversationId }
   },
+  // tts helper not used in the non-skipTts flow
+};
+
+export const vocabService = {
+  list: async () => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/vocab`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return handleResponse(res);
+  },
+  add: async ({ word, lang = 'en', meaningVi, notes, source }) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/vocab`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ word, lang, meaningVi, notes, source })
+    });
+    return handleResponse(res);
+  },
+  remove: async (id) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/vocab/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return handleResponse(res);
+  }
 };

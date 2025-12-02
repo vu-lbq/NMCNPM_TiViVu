@@ -7,6 +7,7 @@ const models = {};
 models.User = require('./User')(sequelize, DataTypes);
 models.Conversation = require('./Conversation')(sequelize, DataTypes);
 models.Message = require('./Message')(sequelize, DataTypes);
+models.Vocabulary = require('./Vocabulary')(sequelize, DataTypes);
 
 // Run associate methods defined on each model
 Object.values(models).forEach((model) => {

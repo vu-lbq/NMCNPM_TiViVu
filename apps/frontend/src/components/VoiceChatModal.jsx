@@ -60,41 +60,33 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
       const arrayBuffer = await blob.arrayBuffer();
       const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
       const filename = `audio_${Date.now()}.webm`;
-      const result = await voiceService.voiceChat({ audioBase64: base64, filename, language: 'auto', conversationId, skipTts: true });
-      const { transcript, replyText, conversationId: newCid } = result || {};
+      const result = await voiceService.voiceChat({ audioBase64: base64, filename, language: 'auto', conversationId });
+      const { transcript, audioBase64: outB64, contentType, conversationId: newCid } = result || {};
       if (transcript) setLastTranscript(transcript);
       if (typeof onReplied === 'function') {
         await onReplied(newCid || conversationId);
       }
-      // fetch TTS as binary for faster playback
-      if (replyText && replyText.trim().length > 0) {
-        const ttsResp = await fetch('/tts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: replyText, voice: 'auto', format: 'mp3' })
-        });
-        if (ttsResp.ok) {
-          const audioBlob = await ttsResp.blob();
-          const url = URL.createObjectURL(audioBlob);
-          // cleanup previous
-          try { if (audioRef.current) audioRef.current.pause(); } catch { /* ignore */ }
-          try { if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current); } catch { /* ignore */ }
-          audioUrlRef.current = url;
-          const audio = new Audio(url);
-          audioRef.current = audio;
-          setIsPlaying(true);
-          setStatus('Playing AI reply...');
-          audio.onended = () => {
-            setIsPlaying(false);
-            setStatus(handsFree ? 'Auto recording...' : 'Tap to record');
-            if (handsFree) {
-              setTimeout(() => {
-                if (!isProcessing) startRecording();
-              }, 500);
-            }
-          };
-          try { await audio.play(); } catch { /* ignore */ }
-        }
+      // play audio from base64 response
+      if (outB64) {
+        const audioBlob = new Blob([Uint8Array.from(atob(outB64), c => c.charCodeAt(0))], { type: contentType || 'audio/mp3' });
+        const url = URL.createObjectURL(audioBlob);
+        try { if (audioRef.current) audioRef.current.pause(); } catch { /* ignore */ }
+        try { if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current); } catch { /* ignore */ }
+        audioUrlRef.current = url;
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        setIsPlaying(true);
+        setStatus('Playing AI reply...');
+        audio.onended = () => {
+          setIsPlaying(false);
+          setStatus(handsFree ? 'Auto recording...' : 'Tap to record');
+          if (handsFree) {
+            setTimeout(() => {
+              if (!isProcessing) startRecording();
+            }, 500);
+          }
+        };
+        try { await audio.play(); } catch { /* ignore */ }
       }
       setStatus("Tap to record");
     } catch (err) {
