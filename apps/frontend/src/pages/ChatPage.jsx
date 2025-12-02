@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, StopCircle, Send, Loader2, XCircle } from "lucide-react";
+import { Mic, StopCircle, Send, Loader2, XCircle, Headphones } from "lucide-react";
 import MainLayout from "../layouts/MainLayout";
 import MessageBubble from "../components/MessageBubble";
+import VoiceChatModal from "../components/VoiceChatModal";
 import DictionaryModal from "../components/DictionaryModal";
 import { useSpeechRecognition, useTextToSpeech } from "../hooks/useSpeech";
 import { chatService, voiceService } from "../services/api";
@@ -29,6 +30,7 @@ const ChatPage = () => {
   const messagesEndRef = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
   const [voiceReplyMode, setVoiceReplyMode] = useState(false); // false: STT to text, true: voice-to-voice
+  const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const mediaRecorderRef = useRef(null);
   const recordChunksRef = useRef([]);
 
@@ -183,6 +185,11 @@ const ChatPage = () => {
     setMessages([]);
     await loadMessages(cid);
   };
+  const handleVoiceReplied = async (cid) => {
+    if (cid) setConversationId(cid);
+    await loadMessages(cid || conversationId);
+    setSidebarRefreshKey((k) => k + 1);
+  };
   // On first render, select an existing conversation if any; do not auto-create
   useEffect(() => {
     (async () => {
@@ -288,6 +295,14 @@ const ChatPage = () => {
               >
                 {voiceReplyMode ? "Voice Reply" : "STT → Text"}
               </button>
+              <button
+                onClick={() => setVoiceModalOpen(true)}
+                disabled={isProcessing || isRecording}
+                className="px-3 py-2 rounded-xl border text-sm bg-white text-[#1D2957] border-gray-200 hover:bg-gray-100 flex items-center gap-2"
+                title="Open Voice Chat Mode"
+              >
+                <Headphones size={16} /> Voice Chat
+              </button>
             </>
           )}
 
@@ -334,6 +349,12 @@ const ChatPage = () => {
       <DictionaryModal
         word={selectedWord}
         onClose={() => setSelectedWord(null)}
+      />
+      <VoiceChatModal
+        isOpen={voiceModalOpen}
+        onClose={() => setVoiceModalOpen(false)}
+        conversationId={conversationId}
+        onReplied={handleVoiceReplied}
       />
     </MainLayout>
   );
