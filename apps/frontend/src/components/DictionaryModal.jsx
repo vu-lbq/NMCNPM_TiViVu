@@ -1,8 +1,55 @@
 import React from "react";
 import { X, BookOpen, Globe } from "lucide-react";
 
+function detectLang(text) {
+  if (!text) return "en";
+  const s = text.normalize("NFC");
+  const viChars = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/;
+  if (viChars.test(s)) return "vi";
+  // If contains only ASCII letters/spaces/punct, default to English
+  return "en";
+}
+
+function buildLinks(text) {
+  const q = encodeURIComponent(text);
+  const lang = detectLang(text);
+  const tokens = String(text || "").trim().split(/\s+/).filter(Boolean);
+  const isSingleWord = tokens.length === 1;
+  const links = [];
+  if (lang === "en") {
+    links.push({
+      href: `https://translate.google.com/?sl=en&tl=vi&text=${q}&op=translate`,
+      label: "Google Translate (EN→VI)",
+      color: "blue",
+      icon: Globe,
+    });
+    if (isSingleWord) {
+      links.push({
+        href: `https://dictionary.cambridge.org/dictionary/english-vietnamese/${q}`,
+        label: "Cambridge EN→VI",
+        color: "orange",
+        icon: BookOpen,
+      });
+    }
+  } else {
+    links.push({
+      href: `https://translate.google.com/?sl=vi&tl=en&text=${q}&op=translate`,
+      label: "Google Translate (VI→EN)",
+      color: "blue",
+      icon: Globe,
+    });
+    // Cambridge focuses on English headwords; skip for VI source
+  }
+  return links;
+}
+
 const DictionaryModal = ({ word, onClose }) => {
   if (!word) return null;
+  const links = buildLinks(word);
+  const tokens = String(word || "").trim().split(/\s+/).filter(Boolean);
+  const isSingleWord = tokens.length === 1;
+  const lang = detectLang(word);
+  const showCambridgeHint = lang === "en" && !isSingleWord;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
@@ -22,23 +69,23 @@ const DictionaryModal = ({ word, onClose }) => {
         </p>
 
         <div className="space-y-3">
-          <a
-            href={`https://translate.google.com/?sl=en&tl=vi&text=${word}&op=translate`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100 transition"
-          >
-            <Globe size={18} /> Google Translate
-          </a>
-          <a
-            href={`https://dictionary.cambridge.org/dictionary/english/${word}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg text-orange-700 hover:bg-orange-100 transition"
-          >
-            <BookOpen size={18} /> Cambridge Dictionary
-          </a>
+          {links.map((l, idx) => (
+            <a
+              key={idx}
+              href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-3 p-3 rounded-lg hover:opacity-90 transition ${
+                l.color === "blue" ? "bg-blue-50 text-blue-700" : "bg-orange-50 text-orange-700"
+              }`}
+            >
+              <l.icon size={18} /> {l.label}
+            </a>
+          ))}
         </div>
+        {showCambridgeHint && (
+          <p className="text-xs text-gray-400 mt-2">Cambridge only supports single English words.</p>
+        )}
       </div>
     </div>
   );

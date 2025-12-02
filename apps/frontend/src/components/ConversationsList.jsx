@@ -23,9 +23,28 @@ export default function ConversationsList({ onSelectConversation, selectedId, re
   useEffect(() => { if (refreshKey !== undefined) load(); }, [refreshKey]);
 
   const createNew = async () => {
+    // Auto-delete previously selected empty generic conversation
+    try {
+      if (selectedId) {
+        const prev = items.find(i => i.id === selectedId);
+        const isGeneric = prev && (!prev.title || /^(new\s+chat|new\s+conversation)$/i.test(prev.title.trim()));
+        if (isGeneric) {
+          // Check messages to ensure it's empty
+          const msgsRes = await chatService.listMessages(selectedId);
+            const msgs = msgsRes?.messages || msgsRes || [];
+          if (msgs.length === 0) {
+            await chatService.deleteConversation(selectedId);
+          }
+        }
+      }
+    } catch (e) {
+      // Non-fatal; proceed with creation
+      console.warn('Auto-delete previous empty convo failed', e);
+    }
+
     const convo = await chatService.createConversation("New Chat");
     await load();
-    if (onSelectConversation) onSelectConversation(convo);
+    if (onSelectConversation) onSelectConversation(convo.conversation || convo);
   };
 
   const onDelete = async (id) => {

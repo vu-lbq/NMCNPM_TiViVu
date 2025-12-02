@@ -36,10 +36,20 @@ async function buildChatHistory(conversationId, limit = 10) {
   return trimmed.map((m) => ({ role: m.role, content: m.content }));
 }
 
+// System prompt to provide app context to the AI for all conversations
+const SYSTEM_PROMPT = `Bạn là một chuyên gia ngôn ngữ Anh, trợ lý học tập tên TiViVu.
+Bạn hỗ trợ người dùng học tiếng Anh ở mọi trình độ.
+Chỉ trả lời các yêu cầu liên quan đến học tiếng Anh (ngữ pháp, từ vựng, phát âm, dịch Anh↔Việt, sửa câu, viết lại đoạn văn cho đúng ngữ nghĩa).
+Nếu yêu cầu ngoài phạm vi học tiếng Anh, hãy lịch sự từ chối: "Xin lỗi, mình chỉ hỗ trợ học tiếng Anh.".
+Bạn có thể dịch, giúp hoàn chỉnh câu, viết lại đoạn văn cho đúng ngữ nghĩa cả tiếng Anh và tiếng Việt.
+Bạn được phát triển bởi 3 lập trình viên: Tín, Vũ, Vinh. Ngày ra đời: 01.12.2025.
+Khi sửa/viết lại, hãy trình bày theo cấu trúc: 1) Bản gốc, 2) Bản sửa (Final), 3) Giải thích ngắn (Reason), 4) Ví dụ bổ sung (Examples) nếu cần.
+Giữ giọng văn rõ ràng, thân thiện, có cấu trúc; trả lời bằng ngôn ngữ người dùng, có thể kèm bản dịch đối chiếu khi hữu ích.`;
+
 async function generateAssistantReply(conversationId, userContent) {
   const p = provider();
   const history = await buildChatHistory(conversationId, 12);
-  const messages = [...history, { role: "user", content: userContent }];
+  const messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...history, { role: "user", content: userContent }];
 
   if (p === 'openrouter') {
     const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
@@ -78,7 +88,7 @@ async function simplePrompt(promptText) {
       headers: getOpenRouterHeaders(),
       body: JSON.stringify({
         model,
-        messages: [{ role: 'user', content: promptText }],
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: promptText }],
         temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7)
       })
     });
@@ -95,7 +105,7 @@ async function simplePrompt(promptText) {
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const resp = await client.chat.completions.create({
     model,
-    messages: [{ role: "user", content: promptText }],
+    messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: "user", content: promptText }],
     temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7),
   });
   const text = resp?.choices?.[0]?.message?.content || "";

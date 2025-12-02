@@ -5,6 +5,19 @@ const MessageBubble = ({ text, role, onWordClick, onSpeak }) => {
   const isUser = role === "user";
   const words = text.split(" ");
 
+  const handleMouseUp = () => {
+    try {
+      const sel = window.getSelection ? window.getSelection() : null;
+      const raw = sel ? sel.toString() : "";
+      const selected = (raw || "").trim();
+      if (selected && onWordClick) {
+        onWordClick(selected);
+      }
+    } catch {
+      // ignore selection errors
+    }
+  };
+
   return (
     <div
       className={`flex w-full mb-6 ${isUser ? "justify-end" : "justify-start"}`}
@@ -33,6 +46,7 @@ const MessageBubble = ({ text, role, onWordClick, onSpeak }) => {
                 : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm"
             }
           `}
+            onMouseUp={handleMouseUp}
           >
             {words.map((word, index) => (
               <span
