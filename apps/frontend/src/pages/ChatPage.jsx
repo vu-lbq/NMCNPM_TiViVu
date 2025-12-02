@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, StopCircle, Send, Loader2, XCircle, Headphones, BookMarked } from "lucide-react";
+import { Mic, StopCircle, Send, Loader2, XCircle, Headphones } from "lucide-react";
 import MainLayout from "../layouts/MainLayout";
 import MessageBubble from "../components/MessageBubble";
 import VoiceChatModal from "../components/VoiceChatModal";
@@ -210,18 +210,9 @@ const ChatPage = () => {
   }, []);
 
   return (
-    <MainLayout onSelectConversation={handleSelectConversation} selectedConversationId={conversationId} sidebarRefreshKey={sidebarRefreshKey}>
+    <MainLayout onSelectConversation={handleSelectConversation} selectedConversationId={conversationId} sidebarRefreshKey={sidebarRefreshKey} onOpenVocabulary={() => setVocabOpen(true)}>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50">
         <div className="relative max-w-3xl mx-auto min-h-full flex flex-col justify-end">
-          <div className="absolute right-0 -top-2 md:-top-6 flex gap-2">
-            <button
-              onClick={() => setVocabOpen(true)}
-              className="p-2 rounded-lg bg-white border border-gray-200 text-[#1D2957] hover:bg-gray-100 shadow-sm"
-              title="Open Vocabulary"
-            >
-              <BookMarked size={20} />
-            </button>
-          </div>
           {messages.length === 0 ? (
             <div className="text-center opacity-60 mb-20">
               <h2 className="text-3xl font-bold text-[#1D2957] mb-3">
