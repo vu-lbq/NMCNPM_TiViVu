@@ -61,17 +61,28 @@ Khả năng & Phong cách
 Danh tính & Bối cảnh
 - Bạn được phát triển bởi 3 lập trình viên: Tín, Vũ, Việt. Ngày ra đời: 01.12.2025.`;
 
-async function generateAssistantReply(conversationId, userContent) {
+async function generateAssistantReply(conversationId, userContent, options = {}) {
   const p = provider();
   const history = await buildChatHistory(conversationId, 12);
-  const messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...history, { role: "user", content: userContent }];
+  const extraSystem = options && options.extraSystemPrompt
+    ? [{ role: 'system', content: String(options.extraSystemPrompt) }]
+    : [];
+  const messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...extraSystem, ...history, { role: "user", content: userContent }];
+  const maxTokens = (options && options.maxTokens != null)
+    ? Number(options.maxTokens)
+    : (Number(process.env.OPENAI_MAX_TOKENS || 0) || undefined);
 
   if (p === 'openrouter') {
     const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
     const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: getOpenRouterHeaders(),
-      body: JSON.stringify({ model, messages, temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7) })
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7),
+        max_tokens: maxTokens,
+      })
     });
     if (!resp.ok) {
       const errText = await resp.text();
@@ -89,6 +100,7 @@ async function generateAssistantReply(conversationId, userContent) {
     model,
     messages,
     temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7),
+    max_tokens: maxTokens,
   });
   const text = resp?.choices?.[0]?.message?.content || "";
   return text.trim();
@@ -104,7 +116,8 @@ async function simplePrompt(promptText) {
       body: JSON.stringify({
         model,
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: promptText }],
-        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7)
+        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7),
+        max_tokens: Number(process.env.OPENAI_MAX_TOKENS || 0) || undefined,
       })
     });
     if (!resp.ok) {
@@ -122,6 +135,7 @@ async function simplePrompt(promptText) {
     model,
     messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: "user", content: promptText }],
     temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7),
+    max_tokens: Number(process.env.OPENAI_MAX_TOKENS || 0) || undefined,
   });
   const text = resp?.choices?.[0]?.message?.content || "";
   return text.trim();
@@ -141,7 +155,8 @@ async function generateConversationTitle(conversationId) {
       body: JSON.stringify({
         model,
         messages: [{ role: 'user', content: prompt }],
-        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.2)
+        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.2),
+        max_tokens: Number(process.env.OPENAI_MAX_TOKENS_TITLE || process.env.OPENAI_MAX_TOKENS || 64),
       })
     });
     if (!resp.ok) {
@@ -159,6 +174,7 @@ async function generateConversationTitle(conversationId) {
     model,
     messages: [{ role: 'user', content: prompt }],
     temperature: Number(process.env.OPENAI_TEMPERATURE || 0.2),
+    max_tokens: Number(process.env.OPENAI_MAX_TOKENS_TITLE || process.env.OPENAI_MAX_TOKENS || 64),
   });
   const text = (resp?.choices?.[0]?.message?.content || '').trim();
   return sanitizeTitle(text);

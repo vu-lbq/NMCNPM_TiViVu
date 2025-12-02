@@ -71,11 +71,13 @@ async function speechToText(req, res) {
 
 module.exports = { textToSpeech, speechToText };
 // POST /voice-chat (auth)
-// Body: { audioBase64, filename?, language?, voice?, format?, conversationId? }
-// Returns: { transcript, replyText, audioBase64, contentType, conversationId }
+// Body: { audioBase64, filename?, language?, voice?, format?, conversationId?, skipTts? }
+// If skipTts=true, the endpoint will return early without synthesizing audio.
+// Returns when skipTts=false: { transcript, replyText, audioBase64, contentType, conversationId }
+// Returns when skipTts=true:  { transcript, replyText, conversationId }
 async function voiceChat(req, res) {
   try {
-    const { audioBase64, filename = `audio_${Date.now()}.webm`, language = 'auto', voice = 'auto', format = 'mp3', conversationId } = req.body || {};
+    const { audioBase64, filename = `audio_${Date.now()}.webm`, language = 'auto', voice = 'auto', format = 'mp3', conversationId, skipTts } = req.body || {};
     if (!audioBase64) return res.status(400).json({ error: 'Missing audioBase64' });
 
     // Resolve conversation (find or create for user)
@@ -106,7 +108,14 @@ async function voiceChat(req, res) {
     // AI reply
     let replyText = '';
     try {
-      replyText = await aiService.generateAssistantReply(convo.id, transcript);
+      replyText = await aiService.generateAssistantReply(
+        convo.id,
+        transcript,
+        {
+          extraSystemPrompt: 'Voice mode: Answer in ≤3 sentences. Keep responses concise and quick for audio playback.',
+          maxTokens: Number(process.env.VOICECHAT_MAX_TOKENS || process.env.OPENAI_MAX_TOKENS || 192)
+        }
+      );
     } catch (e) {
       replyText = 'Sorry, I could not generate a reply right now.';
     }
@@ -122,6 +131,12 @@ async function voiceChat(req, res) {
         if (newTitle) { convo.title = newTitle; await convo.save(); }
       }
     } catch {}
+
+    // If client requests to skip TTS here, return early so client can call /tts separately
+    const shouldSkipTts = typeof skipTts === 'string' ? /^(true|1)$/i.test(skipTts) : !!skipTts;
+    if (shouldSkipTts) {
+      return res.status(200).json({ transcript, replyText, conversationId: convo.id });
+    }
 
     // TTS
     const replyLang = language === 'auto' ? detectLanguage(replyText) : language;

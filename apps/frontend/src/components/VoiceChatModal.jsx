@@ -2,17 +2,7 @@ import React, { useRef, useState } from "react";
 import { Mic, StopCircle, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { voiceService } from "../services/api";
 
-const b64ToBlob = (b64Data, contentType = "", sliceSize = 512) => {
-  const byteCharacters = atob(b64Data);
-  const byteArrays = [];
-  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    const slice = byteCharacters.slice(offset, offset + sliceSize);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
-    byteArrays.push(new Uint8Array(byteNumbers));
-  }
-  return new Blob(byteArrays, { type: contentType });
-};
+// removed: b64ToBlob no longer needed when fetching TTS as binary
 
 export default function VoiceChatModal({ isOpen, onClose, conversationId, onReplied }) {
   const mediaRecorderRef = useRef(null);
@@ -70,34 +60,41 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
       const arrayBuffer = await blob.arrayBuffer();
       const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
       const filename = `audio_${Date.now()}.webm`;
-      const result = await voiceService.voiceChat({ audioBase64: base64, filename, language: 'auto', conversationId });
-      const { transcript, audioBase64: outB64, contentType, conversationId: newCid } = result || {};
+      const result = await voiceService.voiceChat({ audioBase64: base64, filename, language: 'auto', conversationId, skipTts: true });
+      const { transcript, replyText, conversationId: newCid } = result || {};
       if (transcript) setLastTranscript(transcript);
       if (typeof onReplied === 'function') {
         await onReplied(newCid || conversationId);
       }
-      if (outB64) {
-        const audioBlob = b64ToBlob(outB64, contentType || 'audio/mp3');
-        const url = URL.createObjectURL(audioBlob);
-        // cleanup previous
-        try { if (audioRef.current) audioRef.current.pause(); } catch { /* ignore */ }
-        try { if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current); } catch { /* ignore */ }
-        audioUrlRef.current = url;
-        const audio = new Audio(url);
-        audioRef.current = audio;
-        setIsPlaying(true);
-        setStatus('Playing AI reply...');
-        audio.onended = () => {
-          setIsPlaying(false);
-          setStatus(handsFree ? 'Auto recording...' : 'Tap to record');
-          if (handsFree) {
-            // small delay to avoid immediate cut-in
-            setTimeout(() => {
-              if (!isProcessing) startRecording();
-            }, 500);
-          }
-        };
-        try { await audio.play(); } catch { /* ignore */ }
+      // fetch TTS as binary for faster playback
+      if (replyText && replyText.trim().length > 0) {
+        const ttsResp = await fetch('/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: replyText, voice: 'auto', format: 'mp3' })
+        });
+        if (ttsResp.ok) {
+          const audioBlob = await ttsResp.blob();
+          const url = URL.createObjectURL(audioBlob);
+          // cleanup previous
+          try { if (audioRef.current) audioRef.current.pause(); } catch { /* ignore */ }
+          try { if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current); } catch { /* ignore */ }
+          audioUrlRef.current = url;
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          setIsPlaying(true);
+          setStatus('Playing AI reply...');
+          audio.onended = () => {
+            setIsPlaying(false);
+            setStatus(handsFree ? 'Auto recording...' : 'Tap to record');
+            if (handsFree) {
+              setTimeout(() => {
+                if (!isProcessing) startRecording();
+              }, 500);
+            }
+          };
+          try { await audio.play(); } catch { /* ignore */ }
+        }
       }
       setStatus("Tap to record");
     } catch (err) {
