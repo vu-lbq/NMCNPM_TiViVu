@@ -24,6 +24,11 @@ async function addVocab(req, res) {
       return res.status(400).json({ error: 'Missing word' });
     }
     word = word.trim();
+    const tokens = word.split(/\s+/).filter(Boolean);
+    // Enforce: only single English words allowed
+    if (lang !== 'en' || tokens.length !== 1 || /[^a-zA-Z'-]/.test(tokens[0])) {
+      return res.status(400).json({ error: 'Only single English words can be saved' });
+    }
 
     // If meaningVi missing and lang is en, try to translate the word or the shortest definition
     if (!meaningVi) {

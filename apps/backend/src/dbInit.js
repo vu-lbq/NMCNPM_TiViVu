@@ -5,4 +5,16 @@ async function syncDatabase() {
   console.log('Database synced');
 }
 
+if (require.main === module) {
+  (async () => {
+    try {
+      await syncDatabase();
+      process.exit(0);
+    } catch (err) {
+      console.error('Database sync failed:', err);
+      process.exit(1);
+    }
+  })();
+}
+
 module.exports = { syncDatabase };

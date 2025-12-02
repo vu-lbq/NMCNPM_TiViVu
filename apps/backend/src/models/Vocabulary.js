@@ -10,8 +10,11 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
       },
       userId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
+        references: { model: 'users', key: 'id' },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       word: {
         type: DataTypes.STRING(255),

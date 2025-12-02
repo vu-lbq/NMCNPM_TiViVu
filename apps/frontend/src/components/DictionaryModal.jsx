@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, BookOpen, Globe, BookmarkPlus } from "lucide-react";
 import { vocabService } from "../services/api";
 // đây là component hiển thị modal từ điển khi người dùng chọn một từ
@@ -18,47 +18,28 @@ function detectLang(text) {
 function buildLinks(text) {
   const q = encodeURIComponent(text);
   const lang = detectLang(text);
-  const tokens = String(text || "").trim().split(/\s+/).filter(Boolean);
-  const isSingleWord = tokens.length === 1;
-  const links = [];
-  if (lang === "en") {
-    links.push({
-      href: `https://translate.google.com/?sl=en&tl=vi&text=${q}&op=translate`,
-      label: "Google Translate (EN→VI)",
-      color: "blue",
-      icon: Globe,
-    });
-    if (isSingleWord) {
-      links.push({
-        href: `https://dictionary.cambridge.org/dictionary/english-vietnamese/${q}`,
-        label: "Cambridge EN→VI",
-        color: "orange",
-        icon: BookOpen,
-      });
-    }
-  } else {
-    links.push({
-      href: `https://translate.google.com/?sl=vi&tl=en&text=${q}&op=translate`,
-      label: "Google Translate (VI→EN)",
-      color: "blue",
-      icon: Globe,
-    });
-    // Cambridge focuses on English headwords; skip for VI source
+  // Only ever show Google Translate link per requirement
+  if (lang === 'en') {
+    return [{ href: `https://translate.google.com/?sl=en&tl=vi&text=${q}&op=translate`, label: 'Google Translate (EN→VI)', color: 'blue', icon: Globe }];
   }
-  return links;
+  return [{ href: `https://translate.google.com/?sl=vi&tl=en&text=${q}&op=translate`, label: 'Google Translate (VI→EN)', color: 'blue', icon: Globe }];
 }
 
 const DictionaryModal = ({ word, onClose }) => {
   const [saving, setSaving] = useState(false);
+  // Reset saving state whenever selected word changes
+  useEffect(() => {
+    setSaving(false);
+  }, [word]);
   if (!word) return null;
   const links = buildLinks(word);
   const tokens = String(word || "").trim().split(/\s+/).filter(Boolean);
   const isSingleWord = tokens.length === 1;
   const lang = detectLang(word);
-  const showCambridgeHint = lang === "en" && !isSingleWord;
+  const showSave = lang === 'en' && isSingleWord;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+    <div key={word} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 relative">
         <button
           onClick={onClose}
@@ -89,23 +70,29 @@ const DictionaryModal = ({ word, onClose }) => {
             </a>
           ))}
         </div>
-        <button
-          onClick={async () => {
-            try {
+        {showSave && (
+          <button
+            onClick={async () => {
+              if (saving) return;
+              const cleaned = String(word).trim().replace(/^[^a-zA-Z']+|[^a-zA-Z']+$/g, '');
+              if (!cleaned) return;
               setSaving(true);
-              await vocabService.add({ word: String(word).trim(), lang: detectLang(word), source: 'dictionary' });
-              onClose?.();
-            } catch {
-              setSaving(false);
-            }
-          }}
-          disabled={saving}
-          className={`mt-4 w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${saving ? 'bg-gray-200 text-gray-400' : 'bg-[#00BDB6] text-white hover:bg-[#00a8a2]'}`}
-        >
-          <BookmarkPlus size={16} /> {saving ? 'Saving...' : 'Save to Vocabulary'}
-        </button>
-        {showCambridgeHint && (
-          <p className="text-xs text-gray-400 mt-2">Cambridge only supports single English words.</p>
+              try {
+                await vocabService.add({ word: cleaned, lang: 'en', source: 'dictionary' });
+                // Close after success to indicate completion
+                onClose?.();
+              } catch {
+                // keep modal open, allow retry
+              } finally {
+                // In case modal stays open (error), re-enable button
+                setSaving(false);
+              }
+            }}
+            disabled={saving}
+            className={`mt-4 w-full flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${saving ? 'bg-gray-200 text-gray-400' : 'bg-[#00BDB6] text-white hover:bg-[#00a8a2]'}`}
+          >
+            <BookmarkPlus size={16} /> {saving ? 'Saving...' : 'Save to Vocabulary'}
+          </button>
         )}
       </div>
     </div>

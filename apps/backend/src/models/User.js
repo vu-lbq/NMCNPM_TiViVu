@@ -6,6 +6,9 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       User.hasMany(models.Conversation, { foreignKey: 'userId' });
       User.hasMany(models.Message, { foreignKey: 'userId' });
+      if (models.Vocabulary) {
+        User.hasMany(models.Vocabulary, { foreignKey: 'userId' });
+      }
     }
   }
 
