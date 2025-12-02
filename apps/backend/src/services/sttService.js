@@ -7,11 +7,9 @@ async function transcribe({ filePath, openaiClient, model = 'whisper-1', languag
   try {
     if (openaiClient.audio && openaiClient.audio.transcriptions && typeof openaiClient.audio.transcriptions.create === 'function') {
       const file = fs.createReadStream(filePath);
-      const resp = await openaiClient.audio.transcriptions.create({
-        file,
-        model,
-        language,
-      });
+      const args = { file, model };
+      if (language && language !== 'auto') args.language = language;
+      const resp = await openaiClient.audio.transcriptions.create(args);
       // OpenAI SDK returns an object with `text`
       return { text: resp.text || resp?.data?.text || '' };
     }

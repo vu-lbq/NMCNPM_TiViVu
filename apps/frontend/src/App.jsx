@@ -1,5 +1,6 @@
 import React from "react";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import AuthProvider from "./context/AuthProvider";
+import { useAuth } from "./context/useAuth";
 import ChatPage from "./pages/ChatPage";
 import LoginPage from "./pages/LoginPage";
 

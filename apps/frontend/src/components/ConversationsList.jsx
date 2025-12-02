@@ -17,7 +17,7 @@ export default function ConversationsList({ onSelectConversation, selectedId, re
     setLoading(true);
     try {
       // Clean up empty 'New Chat' conversations before loading
-      try { await chatService.cleanupEmpty(); } catch {}
+      try { await chatService.cleanupEmpty(); } catch { /* ignore */ }
       const data = await chatService.listConversations();
       const convos = data?.conversations || data || [];
       setItems(convos);

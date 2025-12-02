@@ -6,7 +6,7 @@ import VoiceChatModal from "../components/VoiceChatModal";
 import DictionaryModal from "../components/DictionaryModal";
 import { useSpeechRecognition, useTextToSpeech } from "../hooks/useSpeech";
 import { chatService, voiceService } from "../services/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 const ChatPage = () => {
   const { user } = useAuth();
@@ -255,20 +255,20 @@ const ChatPage = () => {
         >
           {/* Mic control: browser STT or server recording; include Voice Reply toggle when using server */}
           {hasBrowserSTT ? (
-            <button
-              onClick={isListening ? stopListening : startListening}
-              disabled={isProcessing && !isListening}
-              className={`p-3 rounded-xl transition-all shadow-sm ${
-                isProcessing && !isListening
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : isListening
-                  ? "bg-red-500 text-white animate-pulse shadow-red-200"
-                  : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
-              }`}
-              title="Browser Speech Recognition"
-            >
-              {isListening ? <StopCircle size={24} /> : <Mic size={24} />}
-            </button>
+              <button
+                onClick={isListening ? stopListening : startListening}
+                disabled={isProcessing && !isListening}
+                className={`p-3 rounded-xl transition-all shadow-sm ${
+                  isProcessing && !isListening
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : isListening
+                    ? "bg-red-500 text-white animate-pulse shadow-red-200"
+                    : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
+                }`}
+                title="Browser Speech Recognition (STT to text)"
+              >
+                {isListening ? <StopCircle size={24} /> : <Mic size={24} />}
+              </button>
           ) : (
             <>
               <button
@@ -294,14 +294,6 @@ const ChatPage = () => {
                 title="Toggle voice reply mode"
               >
                 {voiceReplyMode ? "Voice Reply" : "STT → Text"}
-              </button>
-              <button
-                onClick={() => setVoiceModalOpen(true)}
-                disabled={isProcessing || isRecording}
-                className="px-3 py-2 rounded-xl border text-sm bg-white text-[#1D2957] border-gray-200 hover:bg-gray-100 flex items-center gap-2"
-                title="Open Voice Chat Mode"
-              >
-                <Headphones size={16} /> Voice Chat
               </button>
             </>
           )}
@@ -342,6 +334,18 @@ const ChatPage = () => {
             }`}
           >
             <Send size={24} />
+          </button>
+          <button
+            onClick={() => setVoiceModalOpen(true)}
+            disabled={isProcessing || isRecording}
+            className={`p-3 rounded-xl transition-all shadow-sm ml-1 ${
+              isProcessing || isRecording
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
+            }`}
+            title="Open Voice Chat (voice↔voice)"
+          >
+            <Headphones size={24} />
           </button>
         </div>
       </div>
