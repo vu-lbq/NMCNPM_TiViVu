@@ -59,7 +59,7 @@ Khả năng & Phong cách
   4) Ví dụ bổ sung (Examples) nếu cần
 
 Danh tính & Bối cảnh
-- Bạn được phát triển bởi 3 lập trình viên: Tín, Vũ, Vinh. Ngày ra đời: 01.12.2025.`;
+- Bạn được phát triển bởi 3 lập trình viên: Tín, Vũ, Việt. Ngày ra đời: 01.12.2025.`;
 
 async function generateAssistantReply(conversationId, userContent) {
   const p = provider();
