@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { synthesize } = require('../services/ttsService');
 const { transcribe } = require('../services/sttService');
+const { Message, Conversation } = require('../models');
 const aiService = require('../services/aiService');
 let OpenAI;
 try {
@@ -68,3 +69,67 @@ async function speechToText(req, res) {
 }
 
 module.exports = { textToSpeech, speechToText };
+// POST /voice-chat (auth)
+// Body: { audioBase64, filename?, language?, voice?, format?, conversationId? }
+// Returns: { transcript, replyText, audioBase64, contentType, conversationId }
+async function voiceChat(req, res) {
+  try {
+    const { audioBase64, filename = `audio_${Date.now()}.webm`, language = 'en', voice = 'alloy', format = 'mp3', conversationId } = req.body || {};
+    if (!audioBase64) return res.status(400).json({ error: 'Missing audioBase64' });
+
+    // Resolve conversation (find or create for user)
+    let convo = null;
+    if (conversationId) {
+      convo = await Conversation.findOne({ where: { id: conversationId, userId: req.user.id } });
+      if (!convo) return res.status(404).json({ error: 'Conversation not found' });
+    } else {
+      convo = await Conversation.create({ userId: req.user.id, title: 'New Chat' });
+    }
+
+    // Persist temp audio to file
+    const tmpDir = os.tmpdir();
+    const tmpPath = path.join(tmpDir, filename);
+    const buffer = Buffer.from(audioBase64, 'base64');
+    fs.writeFileSync(tmpPath, buffer);
+
+    const client = await getClientSafe();
+    // STT
+    const out = await transcribe({ filePath: tmpPath, openaiClient: client, language });
+    const transcript = (out?.text || '').trim();
+
+    try { fs.unlinkSync(tmpPath); } catch {}
+
+    // Save user message
+    const userMsg = await Message.create({ role: 'user', content: transcript, conversationId: convo.id, userId: req.user.id });
+
+    // AI reply
+    let replyText = '';
+    try {
+      replyText = await aiService.generateAssistantReply(convo.id, transcript);
+    } catch (e) {
+      replyText = 'Sorry, I could not generate a reply right now.';
+    }
+
+    const assistantMsg = await Message.create({ role: 'assistant', content: replyText, conversationId: convo.id, userId: req.user.id });
+
+    // Auto-title if generic
+    try {
+      const currentTitle = (convo.title || '').trim();
+      const isGeneric = currentTitle === '' || /^(new\s+chat|new\s+conversation)$/i.test(currentTitle);
+      if (isGeneric) {
+        const newTitle = await aiService.generateConversationTitle(convo.id);
+        if (newTitle) { convo.title = newTitle; await convo.save(); }
+      }
+    } catch {}
+
+    // TTS
+    const tts = await synthesize({ text: replyText, voice, format, openaiClient: client });
+    const audioB64 = tts.buffer.toString('base64');
+    const contentType = tts.contentType;
+    return res.status(200).json({ transcript, replyText, audioBase64: audioB64, contentType, conversationId: convo.id });
+  } catch (err) {
+    return res.status(500).json({ error: 'voice_chat_failed', message: err.message });
+  }
+}
+
+module.exports.voiceChat = voiceChat;

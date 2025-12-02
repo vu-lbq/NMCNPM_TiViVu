@@ -118,4 +118,13 @@ export const voiceService = {
     });
     return handleResponse(res); // { text }
   },
+  voiceChat: async ({ audioBase64, filename = `audio_${Date.now()}.webm`, language = 'en', voice = 'alloy', format = 'mp3', conversationId }) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/voice-chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ audioBase64, filename, language, voice, format, conversationId })
+    });
+    return handleResponse(res); // { transcript, replyText, audioBase64, contentType, conversationId }
+  },
 };

@@ -28,6 +28,7 @@ const ChatPage = () => {
   const [inflight, setInflight] = useState(null);
   const messagesEndRef = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [voiceReplyMode, setVoiceReplyMode] = useState(false); // false: STT to text, true: voice-to-voice
   const mediaRecorderRef = useRef(null);
   const recordChunksRef = useRef([]);
 
@@ -116,11 +117,28 @@ const ChatPage = () => {
           const arrayBuffer = await blob.arrayBuffer();
           const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
           const filename = `audio_${Date.now()}.webm`;
-          const res = await voiceService.stt({ audioBase64: base64, filename, language: 'en' });
-          const text = (res?.text || '').trim();
-          if (text) {
-            setInput((prev) => (prev ? prev + ' ' : '') + text);
-            setTranscript(text);
+          if (voiceReplyMode) {
+            // Voice -> Voice: send audio and play reply
+            const result = await voiceService.voiceChat({ audioBase64: base64, filename, language: 'en', conversationId });
+            const { audioBase64: outB64, contentType, conversationId: newCid } = result || {};
+            if (newCid && !conversationId) setConversationId(newCid);
+            // Update messages list to reflect DB saved messages
+            try { await loadMessages(newCid || conversationId); } catch { /* ignore */ }
+            // Autoplay returned audio
+            if (outB64) {
+              const audioBlob = b64ToBlob(outB64, contentType || 'audio/mp3');
+              const url = URL.createObjectURL(audioBlob);
+              const audio = new Audio(url);
+              audio.play().catch(() => {});
+            }
+          } else {
+            // Voice -> Text: transcribe and append to input
+            const res = await voiceService.stt({ audioBase64: base64, filename, language: 'en' });
+            const text = (res?.text || '').trim();
+            if (text) {
+              setInput((prev) => (prev ? prev + ' ' : '') + text);
+              setTranscript(text);
+            }
           }
         } catch (err) {
           console.error('STT error:', err);
@@ -142,6 +160,21 @@ const ChatPage = () => {
 
   const stopRecording = () => {
     try { mediaRecorderRef.current?.stop(); } catch { /* ignore */ }
+  };
+
+  const b64ToBlob = (b64Data, contentType = '', sliceSize = 512) => {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+      const slice = byteCharacters.slice(offset, offset + sliceSize);
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+    return new Blob(byteArrays, { type: contentType });
   };
 
   const handleSelectConversation = async (convo) => {
@@ -213,6 +246,7 @@ const ChatPage = () => {
             isProcessing ? "opacity-60" : ""
           }`}
         >
+          {/* Mic control: browser STT or server recording; include Voice Reply toggle when using server */}
           {hasBrowserSTT ? (
             <button
               onClick={isListening ? stopListening : startListening}
@@ -229,20 +263,32 @@ const ChatPage = () => {
               {isListening ? <StopCircle size={24} /> : <Mic size={24} />}
             </button>
           ) : (
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={isProcessing}
-              className={`p-3 rounded-xl transition-all shadow-sm ${
-                isRecording
-                  ? "bg-red-500 text-white animate-pulse shadow-red-200"
-                  : isProcessing
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
-              }`}
-              title="Record audio (server STT)"
-            >
-              {isRecording ? <StopCircle size={24} /> : <Mic size={24} />}
-            </button>
+            <>
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isProcessing}
+                className={`p-3 rounded-xl transition-all shadow-sm ${
+                  isRecording
+                    ? "bg-red-500 text-white animate-pulse shadow-red-200"
+                    : isProcessing
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
+                }`}
+                title={voiceReplyMode ? "Record voice (AI replies with voice)" : "Record audio (transcribe to text)"}
+              >
+                {isRecording ? <StopCircle size={24} /> : <Mic size={24} />}
+              </button>
+              <button
+                onClick={() => setVoiceReplyMode((v) => !v)}
+                disabled={isProcessing || isRecording}
+                className={`px-3 py-2 rounded-xl border text-sm ${
+                  voiceReplyMode ? "bg-[#00BDB6] text-white border-[#00BDB6]" : "bg-white text-[#1D2957] border-gray-200 hover:bg-gray-100"
+                }`}
+                title="Toggle voice reply mode"
+              >
+                {voiceReplyMode ? "Voice Reply" : "STT → Text"}
+              </button>
+            </>
           )}
 
           <div className="flex-1 py-3">

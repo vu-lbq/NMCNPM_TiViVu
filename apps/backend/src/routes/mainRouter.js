@@ -32,6 +32,7 @@ router.get('/ai/test', aiController.test);
 // TTS/STT endpoints
 router.post('/tts', authenticate, voiceController.textToSpeech);
 router.post('/stt', authenticate, voiceController.speechToText);
+router.post('/voice-chat', authenticate, voiceController.voiceChat);
 
 // Translation and dictionary
 router.post('/translate', authenticate, nlpController.translateText);
