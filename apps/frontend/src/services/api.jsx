@@ -15,7 +15,7 @@ function getToken() {
 async function handleResponse(res) {
   if (!res.ok) {
     let msg = await res.text();
-    try { const j = JSON.parse(msg); msg = j.error || j.message || msg; } catch {}
+    try { const j = JSON.parse(msg); msg = j.error || j.message || msg; } catch { /* noop */ }
     throw new Error(msg || `HTTP ${res.status}`);
   }
   const ct = res.headers.get('content-type') || '';
@@ -57,6 +57,14 @@ export const chatService = {
   listConversations: async () => {
     const token = getToken();
     const res = await fetch(`${API_BASE}/conversations`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return handleResponse(res);
+  },
+  cleanupEmpty: async () => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/conversations/cleanup-empty`, {
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
     return handleResponse(res);

@@ -3,7 +3,7 @@ import { Menu, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import ConversationsList from "../components/ConversationsList";
 
-const MainLayout = ({ children, onSelectConversation, selectedConversationId }) => {
+const MainLayout = ({ children, onSelectConversation, selectedConversationId, sidebarRefreshKey }) => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -28,6 +28,7 @@ const MainLayout = ({ children, onSelectConversation, selectedConversationId }) 
               setSidebarOpen(false);
             }}
             selectedId={selectedConversationId}
+            refreshKey={sidebarRefreshKey}
           />
 
           <div className="pt-4 border-t border-white/10 mt-2">

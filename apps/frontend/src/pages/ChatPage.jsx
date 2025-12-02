@@ -22,6 +22,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversationId, setConversationId] = useState(null);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
   const [selectedWord, setSelectedWord] = useState(null);
   const messagesEndRef = useRef(null);
 
@@ -32,6 +33,9 @@ const ChatPage = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // satisfy linter that sidebarRefreshKey is used in this file
+  useEffect(() => {}, [sidebarRefreshKey]);
 
   const ensureConversation = async () => {
     if (conversationId) return conversationId;
@@ -66,6 +70,7 @@ const ChatPage = () => {
       const cid = await ensureConversation();
       await chatService.sendMessage(cid, userMsg.text);
       await loadMessages(cid);
+      setSidebarRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Chat error:", error);
     } finally {
@@ -79,18 +84,25 @@ const ChatPage = () => {
     setMessages([]);
     await loadMessages(cid);
   };
-
-  // On first render, optionally create or pick a conversation and load messages
+  // On first render, select an existing conversation if any; do not auto-create
   useEffect(() => {
     (async () => {
-      const cid = await ensureConversation();
-      await loadMessages(cid);
+      try {
+        const data = await chatService.listConversations();
+        const convos = data?.conversations || data || [];
+        const first = convos[0];
+        if (first) {
+          setConversationId(first.id);
+          await loadMessages(first.id);
+        }
+      } catch (e) {
+        console.error('Load conversations failed', e);
+      }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <MainLayout onSelectConversation={handleSelectConversation} selectedConversationId={conversationId}>
+    <MainLayout onSelectConversation={handleSelectConversation} selectedConversationId={conversationId} sidebarRefreshKey={sidebarRefreshKey}>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50">
         <div className="max-w-3xl mx-auto min-h-full flex flex-col justify-end">
           {messages.length === 0 ? (
@@ -98,9 +110,7 @@ const ChatPage = () => {
               <h2 className="text-3xl font-bold text-[#1D2957] mb-3">
                 Hello, {user?.email || user?.username || "Learner"}
               </h2>
-              <p className="text-gray-600">
-                Start speaking to practice your English!
-              </p>
+              <p className="text-gray-600">Start speaking to practice your English!</p>
             </div>
           ) : (
             messages.map((m, i) => (

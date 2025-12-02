@@ -36,3 +36,22 @@ exports.deleteConversation = async (req, res, next) => {
     res.status(204).end();
   } catch (err) { next(err); }
 };
+
+exports.cleanupEmptyConversations = async (req, res, next) => {
+  try {
+    const convos = await Conversation.findAll({
+      where: { userId: req.user.id },
+      include: [{ model: Message, attributes: ['id'] }]
+    });
+    let deleted = 0;
+    for (const c of convos) {
+      const hasMessages = Array.isArray(c.Messages) ? c.Messages.length > 0 : false;
+      const isGeneric = !c.title || /^(new\s+chat|new\s+conversation)$/i.test(c.title.trim());
+      if (!hasMessages && isGeneric) {
+        await c.destroy();
+        deleted += 1;
+      }
+    }
+    res.json({ deleted });
+  } catch (err) { next(err); }
+};

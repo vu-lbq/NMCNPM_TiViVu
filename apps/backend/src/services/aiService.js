@@ -102,7 +102,55 @@ async function simplePrompt(promptText) {
   return text.trim();
 }
 
+async function generateConversationTitle(conversationId) {
+  const history = await buildChatHistory(conversationId, 8);
+  const snippet = history.map(m => `${m.role}: ${m.content}`).join("\n");
+  const prompt = `Given the conversation transcript below, produce a concise, clear subject title (3-6 words) that describes the conversation context. Do not use quotes, punctuation-heavy strings, or emojis.\n\nTranscript:\n${snippet}\n\nTitle:`;
+
+  const p = provider();
+  if (p === 'openrouter') {
+    const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: getOpenRouterHeaders(),
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.2)
+      })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`OpenRouter error ${resp.status}: ${errText}`);
+    }
+    const data = await resp.json();
+    const text = (data?.choices?.[0]?.message?.content || '').trim();
+    return sanitizeTitle(text);
+  }
+
+  const client = getClient();
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const resp = await client.chat.completions.create({
+    model,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: Number(process.env.OPENAI_TEMPERATURE || 0.2),
+  });
+  const text = (resp?.choices?.[0]?.message?.content || '').trim();
+  return sanitizeTitle(text);
+}
+
+function sanitizeTitle(str) {
+  if (!str) return 'Conversation';
+  let s = str.replace(/^"|"$/g, '').trim();
+  s = s.replace(/[\r\n]+/g, ' ');
+  // limit length
+  if (s.length > 60) s = s.slice(0, 60);
+  // Simple fallback if model returns a sentence with punctuation
+  return s;
+}
+
 module.exports = {
   generateAssistantReply,
   simplePrompt,
+  generateConversationTitle,
 };

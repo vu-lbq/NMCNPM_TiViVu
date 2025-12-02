@@ -1,7 +1,7 @@
 "use strict";
 
 const { Message, Conversation } = require('../models');
-const { generateAssistantReply } = require('../services/aiService');
+const { generateAssistantReply, generateConversationTitle } = require('../services/aiService');
 
 exports.listMessages = async (req, res, next) => {
   try {
@@ -30,6 +30,22 @@ exports.postMessage = async (req, res, next) => {
     }
 
     const assistantMsg = await Message.create({ role: 'assistant', content: replyText, conversationId: convo.id, userId: req.user.id });
+
+    // Auto-update conversation title if it's generic/empty
+    try {
+      const currentTitle = convo.title || '';
+      const isGeneric = currentTitle.trim() === '' || /^(new\s+chat|new\s+conversation)$/i.test(currentTitle.trim());
+      if (isGeneric) {
+        const newTitle = await generateConversationTitle(convo.id);
+        if (newTitle && newTitle.length > 0) {
+          convo.title = newTitle;
+          await convo.save();
+        }
+      }
+    } catch (e) {
+      // non-fatal if title generation fails
+    }
+
     res.status(201).json({ userMessage: userMsg, assistantMessage: assistantMsg });
   } catch (err) { next(err); }
 };

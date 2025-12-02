@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import { MessageSquare, Plus, Trash2, ChevronsUp, ChevronsDown } from "lucide-react";
 import { chatService } from "../services/api";
 
-export default function ConversationsList({ onSelectConversation, selectedId }) {
+export default function ConversationsList({ onSelectConversation, selectedId, refreshKey }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
+      // Clean up empty 'New Chat' conversations before loading
+      try { await chatService.cleanupEmpty(); } catch {}
       const data = await chatService.listConversations();
       const convos = data?.conversations || data || [];
       setItems(convos);
@@ -18,6 +20,7 @@ export default function ConversationsList({ onSelectConversation, selectedId }) 
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { if (refreshKey !== undefined) load(); }, [refreshKey]);
 
   const createNew = async () => {
     const convo = await chatService.createConversation("New Chat");
