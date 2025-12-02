@@ -4,9 +4,11 @@ export const useSpeechRecognition = () => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const recognitionRef = useRef(null);
+  const initialHas = typeof window !== 'undefined' && ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
+  const [hasBrowserSTT] = useState(initialHas);
 
   useEffect(() => {
-    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+    if (hasBrowserSTT) {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
@@ -30,7 +32,7 @@ export const useSpeechRecognition = () => {
       recognition.onend = () => setIsListening(false);
       recognitionRef.current = recognition;
     }
-  }, []);
+  }, [hasBrowserSTT]);
 
   const startListening = () => {
     setTranscript("");
@@ -49,6 +51,7 @@ export const useSpeechRecognition = () => {
     startListening,
     stopListening,
     setTranscript,
+    hasBrowserSTT,
   };
 };
 

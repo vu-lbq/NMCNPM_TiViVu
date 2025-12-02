@@ -4,7 +4,7 @@ import MainLayout from "../layouts/MainLayout";
 import MessageBubble from "../components/MessageBubble";
 import DictionaryModal from "../components/DictionaryModal";
 import { useSpeechRecognition, useTextToSpeech } from "../hooks/useSpeech";
-import { chatService } from "../services/api";
+import { chatService, voiceService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 const ChatPage = () => {
@@ -15,6 +15,7 @@ const ChatPage = () => {
     startListening,
     stopListening,
     setTranscript,
+    hasBrowserSTT,
   } = useSpeechRecognition();
   const { speak } = useTextToSpeech();
 
@@ -26,6 +27,9 @@ const ChatPage = () => {
   const [selectedWord, setSelectedWord] = useState(null);
   const [inflight, setInflight] = useState(null);
   const messagesEndRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const recordChunksRef = useRef([]);
 
   useEffect(() => {
     if (transcript) setInput((prev) => (prev ? prev + " " : "") + transcript);
@@ -97,6 +101,49 @@ const ChatPage = () => {
     }
   };
 
+  // Server-side STT fallback (MediaRecorder -> /stt)
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      recordChunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recordChunksRef.current.push(e.data);
+      };
+      mr.onstop = async () => {
+        try {
+          const blob = new Blob(recordChunksRef.current, { type: mr.mimeType || 'audio/webm' });
+          const arrayBuffer = await blob.arrayBuffer();
+          const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          const filename = `audio_${Date.now()}.webm`;
+          const res = await voiceService.stt({ audioBase64: base64, filename, language: 'en' });
+          const text = (res?.text || '').trim();
+          if (text) {
+            setInput((prev) => (prev ? prev + ' ' : '') + text);
+            setTranscript(text);
+          }
+        } catch (err) {
+          console.error('STT error:', err);
+        } finally {
+          // stop all tracks
+          try { stream.getTracks().forEach(t => t.stop()); } catch { /* ignore */ }
+          setIsRecording(false);
+          mediaRecorderRef.current = null;
+        }
+      };
+      mediaRecorderRef.current = mr;
+      mr.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Mic access error:', err);
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    try { mediaRecorderRef.current?.stop(); } catch { /* ignore */ }
+  };
+
   const handleSelectConversation = async (convo) => {
     const cid = convo?.id;
     setConversationId(cid);
@@ -166,19 +213,37 @@ const ChatPage = () => {
             isProcessing ? "opacity-60" : ""
           }`}
         >
-          <button
-            onClick={isListening ? stopListening : startListening}
-            disabled={isProcessing && !isListening}
-            className={`p-3 rounded-xl transition-all shadow-sm ${
-              isProcessing && !isListening
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : isListening
-                ? "bg-red-500 text-white animate-pulse shadow-red-200"
-                : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
-            }`}
-          >
-            {isListening ? <StopCircle size={24} /> : <Mic size={24} />}
-          </button>
+          {hasBrowserSTT ? (
+            <button
+              onClick={isListening ? stopListening : startListening}
+              disabled={isProcessing && !isListening}
+              className={`p-3 rounded-xl transition-all shadow-sm ${
+                isProcessing && !isListening
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : isListening
+                  ? "bg-red-500 text-white animate-pulse shadow-red-200"
+                  : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
+              }`}
+              title="Browser Speech Recognition"
+            >
+              {isListening ? <StopCircle size={24} /> : <Mic size={24} />}
+            </button>
+          ) : (
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isProcessing}
+              className={`p-3 rounded-xl transition-all shadow-sm ${
+                isRecording
+                  ? "bg-red-500 text-white animate-pulse shadow-red-200"
+                  : isProcessing
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
+              }`}
+              title="Record audio (server STT)"
+            >
+              {isRecording ? <StopCircle size={24} /> : <Mic size={24} />}
+            </button>
+          )}
 
           <div className="flex-1 py-3">
             <textarea

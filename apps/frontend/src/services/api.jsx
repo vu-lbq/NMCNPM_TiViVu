@@ -107,3 +107,15 @@ export const chatService = {
     return handleResponse(res);
   }
 };
+
+export const voiceService = {
+  stt: async ({ audioBase64, filename = `audio_${Date.now()}.webm`, language }) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/stt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ audioBase64, filename, language })
+    });
+    return handleResponse(res); // { text }
+  },
+};
