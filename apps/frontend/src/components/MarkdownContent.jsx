@@ -1,7 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+// đây là component hiển thị nội dung markdown với các định dạng cơ bản
 const MarkdownContent = ({ content }) => {
   return (
     <div className="max-w-none">

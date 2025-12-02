@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { MessageSquare, Plus, Trash2, ChevronsUp, ChevronsDown } from "lucide-react";
 import { chatService } from "../services/api";
+// đây là component hiển thị danh sách các cuộc hội thoại (conversations) trong sidebar
+// cho phép tạo mới, chọn và xóa cuộc hội thoại
+// props: onSelectConversation(id), selectedId, refreshKey
+// nó tự động load lại khi refreshKey thay đổi
+// khi tạo cuộc hội thoại mới, nó sẽ xóa cuộc hội thoại trống trước đó nếu có
+// khi xóa cuộc hội thoại, nếu cuộc hội thoại đó đang được chọn, nó sẽ chọn cuộc hội thoại đầu tiên trong danh sách
+// có các nút để cuộn lên đầu hoặc xuống cuối danh sách cuộc hội thoại
 
 export default function ConversationsList({ onSelectConversation, selectedId, refreshKey }) {
   const [items, setItems] = useState([]);

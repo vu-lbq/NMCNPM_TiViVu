@@ -1,6 +1,10 @@
 import React from "react";
 import { X, BookOpen, Globe } from "lucide-react";
-
+// đây là component hiển thị modal từ điển khi người dùng chọn một từ
+// nó cung cấp các liên kết đến các nguồn từ điển và dịch thuật phổ biến
+// hàm để phát hiện ngôn ngữ của từ đã chọn
+// và xây dựng các liên kết tương ứng
+// có thể chọn từ tiếng Anh hoặc tiếng Việt
 function detectLang(text) {
   if (!text) return "en";
   const s = text.normalize("NFC");

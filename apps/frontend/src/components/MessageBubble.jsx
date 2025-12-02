@@ -1,7 +1,8 @@
 import React from "react";
 import { Volume2, User, Bot } from "lucide-react";
 import MarkdownContent from "./MarkdownContent";
-
+// MessageBubble component to display individual messages
+// đây là component hiển thị bong bóng tin nhắn (message bubble) trong giao diện chat
 const MessageBubble = ({ text, role, onWordClick, onSpeak }) => {
   const isUser = role === "user";
   const words = text.split(" ");
