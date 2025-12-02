@@ -1,7 +1,7 @@
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
-const { synthesize } = require('../services/ttsService');
+const { synthesize, detectLanguage } = require('../services/ttsService');
 const { transcribe } = require('../services/sttService');
 const { Message, Conversation } = require('../models');
 const aiService = require('../services/aiService');
@@ -25,12 +25,13 @@ async function getClientSafe() {
 // POST /tts  { text, voice?, format? } -> audio binary
 async function textToSpeech(req, res) {
   try {
-    const { text, voice = 'alloy', format = 'mp3' } = req.body || {};
+    const { text, voice = 'auto', format = 'mp3' } = req.body || {};
     if (!text || typeof text !== 'string') {
       return res.status(400).json({ error: 'Missing text' });
     }
     const client = await getClientSafe();
-    const result = await synthesize({ text, voice, format, openaiClient: client });
+    const lang = detectLanguage(text);
+    const result = await synthesize({ text, voice, format, openaiClient: client, language: lang });
     res.setHeader('Content-Type', result.contentType);
     res.setHeader('Content-Length', result.buffer.length);
     return res.status(200).send(result.buffer);
@@ -74,7 +75,7 @@ module.exports = { textToSpeech, speechToText };
 // Returns: { transcript, replyText, audioBase64, contentType, conversationId }
 async function voiceChat(req, res) {
   try {
-    const { audioBase64, filename = `audio_${Date.now()}.webm`, language = 'en', voice = 'alloy', format = 'mp3', conversationId } = req.body || {};
+    const { audioBase64, filename = `audio_${Date.now()}.webm`, language = 'auto', voice = 'auto', format = 'mp3', conversationId } = req.body || {};
     if (!audioBase64) return res.status(400).json({ error: 'Missing audioBase64' });
 
     // Resolve conversation (find or create for user)
@@ -123,7 +124,8 @@ async function voiceChat(req, res) {
     } catch {}
 
     // TTS
-    const tts = await synthesize({ text: replyText, voice, format, openaiClient: client });
+    const replyLang = language === 'auto' ? detectLanguage(replyText) : language;
+    const tts = await synthesize({ text: replyText, voice, format, openaiClient: client, language: replyLang });
     const audioB64 = tts.buffer.toString('base64');
     const contentType = tts.contentType;
     return res.status(200).json({ transcript, replyText, audioBase64: audioB64, contentType, conversationId: convo.id });
