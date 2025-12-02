@@ -1,5 +1,6 @@
 import React from "react";
 import { Volume2, User, Bot } from "lucide-react";
+import MarkdownContent from "./MarkdownContent";
 
 const MessageBubble = ({ text, role, onWordClick, onSpeak }) => {
   const isUser = role === "user";
@@ -48,19 +49,25 @@ const MessageBubble = ({ text, role, onWordClick, onSpeak }) => {
           `}
             onMouseUp={handleMouseUp}
           >
-            {words.map((word, index) => (
-              <span
-                key={index}
-                onClick={() =>
-                  onWordClick(word.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, ""))
-                }
-                className={`cursor-pointer rounded px-0.5 transition-colors ${
-                  isUser ? "hover:bg-[#00BDB6]/20" : "hover:bg-yellow-100"
-                }`}
-              >
-                {word}{" "}
-              </span>
-            ))}
+            {isUser ? (
+              words.map((word, index) => (
+                <span
+                  key={index}
+                  onClick={() =>
+                    onWordClick(
+                      word.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "")
+                    )
+                  }
+                  className={`cursor-pointer rounded px-0.5 transition-colors ${
+                    isUser ? "hover:bg-[#00BDB6]/20" : "hover:bg-yellow-100"
+                  }`}
+                >
+                  {word}{" "}
+                </span>
+              ))
+            ) : (
+              <MarkdownContent content={text} />
+            )}
           </div>
 
           {!isUser && (
