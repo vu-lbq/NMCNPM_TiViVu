@@ -13,6 +13,7 @@ router.use(authenticate);
 router.get('/', conversationController.listConversations);
 router.post('/', conversationController.createConversation);
 router.get('/:id', conversationController.getConversation);
+router.delete('/:id', conversationController.deleteConversation);
 
 // Messages under a conversation
 router.get('/:id/messages', messageController.listMessages);

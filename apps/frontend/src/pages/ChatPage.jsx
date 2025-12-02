@@ -41,6 +41,18 @@ const ChatPage = () => {
     return cid;
   };
 
+  const loadMessages = async (cid) => {
+    if (!cid) return;
+    const result = await chatService.listMessages(cid);
+    const items = result?.messages || result || [];
+    const mapped = items.map((m) => ({
+      text: m.content || m.text || "",
+      role: m.role || "user",
+      timestamp: m.createdAt ? new Date(m.createdAt) : new Date(),
+    }));
+    setMessages(mapped);
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isProcessing) return;
 
@@ -52,13 +64,8 @@ const ChatPage = () => {
 
     try {
       const cid = await ensureConversation();
-      const result = await chatService.sendMessage(cid, userMsg.text);
-      const assistant = result?.assistantMessage || result?.assistant || result?.bot;
-      const replyText = assistant?.content || assistant?.text || "";
-      setMessages((prev) => [
-        ...prev,
-        { text: replyText, role: "bot", timestamp: new Date() },
-      ]);
+      await chatService.sendMessage(cid, userMsg.text);
+      await loadMessages(cid);
     } catch (error) {
       console.error("Chat error:", error);
     } finally {
@@ -66,14 +73,24 @@ const ChatPage = () => {
     }
   };
 
-  const handleNewChat = async () => {
+  const handleSelectConversation = async (convo) => {
+    const cid = convo?.id;
+    setConversationId(cid);
     setMessages([]);
-    setConversationId(null);
-    await ensureConversation();
+    await loadMessages(cid);
   };
 
+  // On first render, optionally create or pick a conversation and load messages
+  useEffect(() => {
+    (async () => {
+      const cid = await ensureConversation();
+      await loadMessages(cid);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <MainLayout onNewChat={handleNewChat}>
+    <MainLayout onSelectConversation={handleSelectConversation} selectedConversationId={conversationId}>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50">
         <div className="max-w-3xl mx-auto min-h-full flex flex-col justify-end">
           {messages.length === 0 ? (

@@ -70,6 +70,17 @@ export const chatService = {
     });
     return handleResponse(res);
   },
+  deleteConversation: async (conversationId) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/conversations/${conversationId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok && res.status !== 204) {
+      await handleResponse(res); // will throw
+    }
+    return true;
+  },
   listMessages: async (conversationId) => {
     const token = getToken();
     const res = await fetch(`${API_BASE}/conversations/${conversationId}/messages`, {
