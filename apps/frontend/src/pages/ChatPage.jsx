@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, StopCircle, Send, Loader2 } from "lucide-react";
+import { Mic, StopCircle, Send, Loader2, XCircle } from "lucide-react";
 import MainLayout from "../layouts/MainLayout";
 import MessageBubble from "../components/MessageBubble";
 import DictionaryModal from "../components/DictionaryModal";
@@ -24,6 +24,7 @@ const ChatPage = () => {
   const [conversationId, setConversationId] = useState(null);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
   const [selectedWord, setSelectedWord] = useState(null);
+  const [inflight, setInflight] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -68,13 +69,31 @@ const ChatPage = () => {
 
     try {
       const cid = await ensureConversation();
-      await chatService.sendMessage(cid, userMsg.text);
+      const controller = new AbortController();
+      setInflight(controller);
+      await chatService.sendMessage(cid, userMsg.text, { signal: controller.signal });
       await loadMessages(cid);
       setSidebarRefreshKey((k) => k + 1);
     } catch (error) {
       console.error("Chat error:", error);
     } finally {
       setIsProcessing(false);
+      setInflight(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      if (inflight) inflight.abort();
+    } catch {
+      // ignore abort errors
+    }
+    setIsProcessing(false);
+    setInflight(null);
+    try {
+      if (conversationId) await loadMessages(conversationId);
+    } catch {
+      // ignore reload errors
     }
   };
 
@@ -104,7 +123,14 @@ const ChatPage = () => {
   return (
     <MainLayout onSelectConversation={handleSelectConversation} selectedConversationId={conversationId} sidebarRefreshKey={sidebarRefreshKey}>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50">
-        <div className="max-w-3xl mx-auto min-h-full flex flex-col justify-end">
+        <div className="relative max-w-3xl mx-auto min-h-full flex flex-col justify-end">
+          {isProcessing && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-start justify-end p-2">
+              <button onClick={handleCancel} className="flex items-center gap-2 bg-gray-800/80 text-white text-sm px-3 py-2 rounded-lg hover:bg-gray-800">
+                <XCircle size={16} /> Cancel
+              </button>
+            </div>
+          )}
           {messages.length === 0 ? (
             <div className="text-center opacity-60 mb-20">
               <h2 className="text-3xl font-bold text-[#1D2957] mb-3">
@@ -123,12 +149,9 @@ const ChatPage = () => {
               />
             ))
           )}
-
-          {isProcessing && (
-            <div className="flex gap-2 text-[#00BDB6] text-sm items-center ml-2 mb-4 font-medium">
-              <Loader2 size={16} className="animate-spin" /> AI is thinking...
-            </div>
-          )}
+          <div className="flex gap-2 text-[#00BDB6] text-sm items-center ml-2 mb-4 font-medium">
+            {isProcessing && (<><Loader2 size={16} className="animate-spin" /> AI is thinking...</>)}
+          </div>
           <div ref={messagesEndRef} />
         </div>
       </div>

@@ -96,12 +96,13 @@ export const chatService = {
     });
     return handleResponse(res);
   },
-  sendMessage: async (conversationId, content) => {
+  sendMessage: async (conversationId, content, opts = {}) => {
     const token = getToken();
     const res = await fetch(`${API_BASE}/conversations/${conversationId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content }),
+      signal: opts.signal,
     });
     return handleResponse(res);
   }
