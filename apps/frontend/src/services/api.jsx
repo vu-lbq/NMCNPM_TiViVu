@@ -147,6 +147,21 @@ export const voiceService = {
     });
     return handleResponse(res); // { transcript, replyText, audioBase64, contentType, conversationId }
   },
+  tts: async ({ text, language = 'en', voice = 'alloy', format = 'mp3' }) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ text, language, voice, format })
+    });
+    if (!res.ok) {
+      await handleResponse(res); // throw with proper error
+    }
+    const contentType = res.headers.get('content-type') || 'audio/mpeg';
+    const buffer = await res.arrayBuffer();
+    const b64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    return { audioBase64: b64, contentType };
+  },
   // tts helper not used in the non-skipTts flow
 };
 

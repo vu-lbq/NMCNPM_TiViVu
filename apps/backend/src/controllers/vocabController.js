@@ -19,7 +19,7 @@ async function listVocab(req, res) {
 // POST /vocab { word, lang?, meaningVi?, notes?, source? }
 async function addVocab(req, res) {
   try {
-    let { word, lang = 'en', meaningVi, notes, source } = req.body || {};
+    let { word, lang = 'en', meaningVi, notes, source, phonetics } = req.body || {};
     if (!word || typeof word !== 'string') {
       return res.status(400).json({ error: 'Missing word' });
     }
@@ -38,16 +38,34 @@ async function addVocab(req, res) {
       } catch {}
     }
 
+    // If phonetics missing, try to fetch from dictionaryapi.dev quickly
+    if (!phonetics) {
+      try {
+        const url = `https://api.dictionaryapi.dev/api/v2/entries/${encodeURIComponent('en')}/${encodeURIComponent(word)}`;
+        const r = await fetch(url);
+        if (r.ok) {
+          const data = await r.json();
+          const arr = Array.isArray(data) ? data : [data];
+          // Prefer entry.phonetic; fallback to first phonetics.text
+          const first = arr[0];
+          const fromMain = first && typeof first.phonetic === 'string' ? first.phonetic : null;
+          const fromList = first && Array.isArray(first.phonetics) ? (first.phonetics.find(p => p && typeof p.text === 'string')?.text || null) : null;
+          phonetics = fromMain || fromList || null;
+        }
+      } catch {}
+    }
+
     // Upsert by (userId, word, lang)
     const [item, created] = await Vocabulary.findOrCreate({
       where: { userId: req.user.id, word, lang },
-      defaults: { userId: req.user.id, word, lang, meaningVi: meaningVi || null, notes: notes || null, source: source || null },
+      defaults: { userId: req.user.id, word, lang, meaningVi: meaningVi || null, notes: notes || null, source: source || null, phonetics: phonetics || null },
     });
     if (!created) {
       // Update meaning/notes if provided
       if (meaningVi) item.meaningVi = meaningVi;
       if (notes) item.notes = notes;
       if (source) item.source = source;
+      if (phonetics) item.phonetics = phonetics;
       await item.save();
     }
     return res.status(201).json({ item });

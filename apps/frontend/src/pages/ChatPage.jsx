@@ -37,6 +37,7 @@ const ChatPage = () => {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const mediaRecorderRef = useRef(null);
   const recordChunksRef = useRef([]);
+  const textAreaRef = useRef(null);
 
   useEffect(() => {
     if (transcript) setInput((prev) => (prev ? prev + " " : "") + transcript);
@@ -107,6 +108,16 @@ const ChatPage = () => {
       // ignore reload errors
     }
   };
+
+  // Auto-resize input up to ~4 lines, then scroll
+  useEffect(() => {
+    const el = textAreaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxPx = 112; // ~4 lines
+    const next = Math.min(el.scrollHeight, maxPx);
+    el.style.height = `${next}px`;
+  }, [input]);
 
   // Server-side STT fallback (MediaRecorder -> /stt)
   const startRecording = async () => {
@@ -304,8 +315,9 @@ const ChatPage = () => {
             </>
           )}
 
-          <div className="flex-1 py-3">
+          <div className="flex-1 py-1">
             <textarea
+              ref={textAreaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -318,7 +330,7 @@ const ChatPage = () => {
                 isProcessing ? "AI is thinking..." : isListening ? "Listening..." : "Type a message..."
               }
               disabled={isProcessing}
-              className={`w-full bg-transparent border-none outline-none resize-none max-h-32 text-[#1D2957] placeholder-gray-400 ${
+              className={`w-full bg-transparent border-none outline-none resize-none overflow-y-auto max-h-[112px] text-[#1D2957] placeholder-gray-400 text-sm leading-tight ${
                 isProcessing ? "cursor-not-allowed" : ""
               }`}
               rows={1}

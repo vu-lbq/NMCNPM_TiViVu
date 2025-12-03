@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Trash2, ExternalLink } from 'lucide-react';
-import { vocabService } from '../services/api';
+import { X, Trash2, ExternalLink, Volume2 } from 'lucide-react';
+import { vocabService, voiceService } from '../services/api';
 
 function groupByDate(items) {
   const map = new Map();
@@ -27,6 +27,7 @@ function googleLink(word, lang = 'en') {
 export default function VocabularyModal({ isOpen, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [playingId, setPlayingId] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -74,6 +75,32 @@ export default function VocabularyModal({ isOpen, onClose }) {
                           <a href={googleLink(it.word, it.lang)} target="_blank" rel="noreferrer" title="Open in Google Translate" className="text-gray-500 hover:text-black">
                             <ExternalLink size={14} />
                           </a>
+                          {it.phonetics && (
+                            <span className="text-sm text-gray-600">/{it.phonetics}/</span>
+                          )}
+                          <button
+                            onClick={async () => {
+                              try {
+                                setPlayingId(it.id);
+                                const resp = await voiceService.tts({ text: it.word, language: it.lang || 'en', voice: 'alloy', format: 'mp3' });
+                                const b64 = resp?.audioBase64;
+                                const ct = resp?.contentType || 'audio/mpeg';
+                                if (b64) {
+                                  const audio = new Audio(`data:${ct};base64,${b64}`);
+                                  audio.onended = () => setPlayingId(null);
+                                  audio.play().catch(() => setPlayingId(null));
+                                } else {
+                                  setPlayingId(null);
+                                }
+                              } catch {
+                                setPlayingId(null);
+                              }
+                            }}
+                            className={`p-1 rounded ${playingId === it.id ? 'text-blue-600' : 'text-gray-600 hover:text-black'}`}
+                            title="Play pronunciation"
+                          >
+                            <Volume2 size={16} />
+                          </button>
                         </div>
                         {it.meaningVi && (
                           <div className="text-sm text-gray-700 whitespace-pre-wrap">{it.meaningVi}</div>

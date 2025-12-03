@@ -25,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 'en',
       },
+        phonetics: {
+          type: DataTypes.STRING(128),
+          allowNull: true,
+        },
       meaningVi: {
         type: DataTypes.TEXT,
         allowNull: true,
