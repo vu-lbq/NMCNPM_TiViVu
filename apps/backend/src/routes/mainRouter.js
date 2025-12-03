@@ -8,6 +8,7 @@ const aiController = require('../controllers/aiController');
 const voiceController = require('../controllers/voiceController');
 const nlpController = require('../controllers/nlpController');
 const vocabController = require('../controllers/vocabController');
+const passwordController = require('../controllers/passwordController');
 
 router.get('/status', (req, res) => {
   res.send('API is running');
@@ -23,6 +24,11 @@ router.get('/login', controller.getLogin);
 router.post('/login', authController.postLogin);
 router.post('/register', authController.postRegister);
 router.get('/me', authenticate, authController.getMe);
+
+// Forgot/Reset password
+router.post('/auth/forgot-password', passwordController.forgotPassword);
+router.get('/auth/reset', passwordController.showReset);
+router.post('/auth/reset', passwordController.resetPassword);
 
 // Conversations + Messages API (protected)
 router.use('/conversations', conversationRouter);

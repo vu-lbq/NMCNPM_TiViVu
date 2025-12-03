@@ -50,7 +50,23 @@ export const authService = {
       email,
       token: data.token,
     };
-  }
+  },
+  forgotPassword: async (email) => {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    return handleResponse(res);
+  },
+  resetPassword: async ({ email, token, password }) => {
+    const res = await fetch(`${API_BASE}/auth/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, token, password })
+    });
+    return handleResponse(res);
+  },
 };
 
 export const chatService = {

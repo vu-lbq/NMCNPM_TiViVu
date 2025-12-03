@@ -114,6 +114,11 @@ const LoginPage = () => {
           >
             {loading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
           </button>
+        {!isLogin && (
+          <div className="mt-4 text-center">
+            <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot your password?</a>
+          </div>
+        )}
         </form>
 
         <div className="mt-6 text-center">
