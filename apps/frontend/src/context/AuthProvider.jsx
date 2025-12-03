@@ -25,13 +25,27 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (email, password, displayName) => {
+    setLoading(true);
+    try {
+      const userData = await authService.register(email, password, displayName);
+      setUser(userData);
+      localStorage.setItem("tivivu_user", JSON.stringify(userData));
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("tivivu_user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
