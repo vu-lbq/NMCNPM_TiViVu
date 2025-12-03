@@ -35,6 +35,8 @@ export const authService = {
     return {
       id: data.user?.id || data.id || null,
       email,
+      displayName: data.user?.displayName || null,
+      role: data.user?.role || 'user',
       token: data.token,
     };
   },
@@ -48,6 +50,8 @@ export const authService = {
     return {
       id: data.user?.id || data.id || null,
       email,
+      displayName: data.user?.displayName || displayName || null,
+      role: data.user?.role || 'user',
       token: data.token,
     };
   },
@@ -170,5 +174,49 @@ export const vocabService = {
       headers: { Authorization: `Bearer ${token}` }
     });
     return handleResponse(res);
+  }
+};
+
+export const adminService = {
+  getStats: async () => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } });
+    return handleResponse(res);
+  },
+  listUsers: async () => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/admin/users`, { headers: { Authorization: `Bearer ${token}` } });
+    return handleResponse(res);
+  },
+  createUser: async ({ username, password, displayName, role = 'user' }) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/admin/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ username, password, displayName, role })
+    });
+    return handleResponse(res);
+  },
+  deleteUser: async (id) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/admin/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok && res.status !== 204) await handleResponse(res);
+    return true;
+  },
+  toggleRole: async (id) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/admin/users/${id}/toggle-role`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    return handleResponse(res);
+  },
+  listFeedback: async () => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/admin/feedback`, { headers: { Authorization: `Bearer ${token}` } });
+    return handleResponse(res);
+  },
+  deleteFeedback: async (id) => {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/admin/feedback/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok && res.status !== 204) await handleResponse(res);
+    return true;
   }
 };

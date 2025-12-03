@@ -23,9 +23,9 @@ exports.postRegister = async (req, res, next) => {
       return res.status(409).json({ message: 'Email already exists' });
     }
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, passwordHash, displayName });
+    const user = await User.create({ username, passwordHash, displayName, role: 'user' });
     const token = signToken(user);
-    return res.status(201).json({ message: 'Registered', token, accessToken: token, user: { id: user.id, email: user.username, displayName: user.displayName } });
+    return res.status(201).json({ message: 'Registered', token, accessToken: token, user: { id: user.id, email: user.username, displayName: user.displayName, role: user.role } });
   } catch (err) {
     next(err);
   }
@@ -47,7 +47,7 @@ exports.postLogin = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     const token = signToken(user);
-    return res.status(200).json({ message: 'Login successful', token, accessToken: token, user: { id: user.id, email: user.username, displayName: user.displayName } });
+    return res.status(200).json({ message: 'Login successful', token, accessToken: token, user: { id: user.id, email: user.username, displayName: user.displayName, role: user.role } });
   } catch (err) {
     next(err);
   }

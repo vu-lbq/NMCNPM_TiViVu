@@ -10,11 +10,18 @@ exports.authenticate = async (req, res, next) => {
     if (!token) return res.status(401).json({ message: 'Missing token' });
     const secret = process.env.JWT_SECRET || 'dev_secret_change_me';
     const payload = jwt.verify(token, secret);
-    const user = await User.findByPk(payload.sub, { attributes: ['id', 'username', 'displayName'] });
+    const user = await User.findByPk(payload.sub, { attributes: ['id', 'username', 'displayName', 'role'] });
     if (!user) return res.status(401).json({ message: 'Invalid token' });
-    req.user = { id: user.id, username: user.username, displayName: user.displayName };
+    req.user = { id: user.id, username: user.username, displayName: user.displayName, role: user.role };
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Unauthorized', error: err.message });
   }
+};
+
+exports.ensureAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  return next();
 };

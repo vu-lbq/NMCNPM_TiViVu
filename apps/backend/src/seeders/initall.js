@@ -17,6 +17,18 @@ module.exports = {
 			const users = [];
 			const bcrypt = require('bcryptjs');
 			const domain = 'gmail.com';
+			// Add admin user
+			const adminId = randomUUID();
+			userIds.push(adminId);
+			users.push({
+				id: adminId,
+				username: 'admin@tivivu.com',
+				passwordHash: bcrypt.hashSync('Pass1234', 10),
+				displayName: 'Admin',
+				role: 'admin',
+				createdAt: now,
+				updatedAt: now,
+			});
 			for (let i = 1; i <= 5; i++) {
 				const id = randomUUID();
 				userIds.push(id);
@@ -27,6 +39,7 @@ module.exports = {
 					// Seed with 8-character passwords to match policy
 					passwordHash: bcrypt.hashSync('Pass1234', 10),
 					displayName: `User ${i}`,
+					role: 'user',
 					createdAt: now,
 					updatedAt: now,
 				});

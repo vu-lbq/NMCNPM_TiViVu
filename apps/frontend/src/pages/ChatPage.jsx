@@ -5,6 +5,7 @@ import MessageBubble from "../components/MessageBubble";
 import VoiceChatModal from "../components/VoiceChatModal";
 import DictionaryModal from "../components/DictionaryModal";
 import VocabularyModal from "../components/VocabularyModal";
+import FeedbackModal from "../components/FeedbackModal";
 import { useSpeechRecognition, useTextToSpeech } from "../hooks/useSpeech";
 import { chatService, voiceService } from "../services/api";
 import { useAuth } from "../context/useAuth";
@@ -33,6 +34,7 @@ const ChatPage = () => {
   const [voiceReplyMode, setVoiceReplyMode] = useState(false); // false: STT to text, true: voice-to-voice
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
   const [vocabOpen, setVocabOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const mediaRecorderRef = useRef(null);
   const recordChunksRef = useRef([]);
 
@@ -249,12 +251,14 @@ const ChatPage = () => {
         </div>
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-200">
-        <div
-          className={`max-w-3xl mx-auto relative flex items-end gap-3 bg-gray-50 p-2 rounded-2xl shadow-inner border border-gray-100 ${
-            isProcessing ? "opacity-60" : ""
-          }`}
-        >
+      <div className="p-4 bg-white border-t border-gray-200 relative">
+        <div className="max-w-3xl mx-auto">
+          <div className="relative flex items-end gap-3">
+            <div
+              className={`flex-1 relative flex items-end gap-3 bg-gray-50 p-2 rounded-2xl shadow-inner border border-gray-100 ${
+                isProcessing ? "opacity-60" : ""
+              }`}
+            >
           {/* Mic control: browser STT or server recording; include Voice Reply toggle when using server */}
           {hasBrowserSTT ? (
               <button
@@ -326,30 +330,39 @@ const ChatPage = () => {
             )}
           </div>
 
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isProcessing}
-            className={`p-3 rounded-xl transition-all shadow-md ${
-              !input.trim() || isProcessing
-                ? "bg-gray-200 text-gray-400 shadow-none cursor-not-allowed"
-                : "bg-[#00BDB6] text-white hover:bg-[#00a8a2] shadow-[#00BDB6]/30"
-            }`}
-          >
-            <Send size={24} />
-          </button>
-          <button
-            onClick={() => setVoiceModalOpen(true)}
-            disabled={isProcessing || isRecording}
-            className={`p-3 rounded-xl transition-all shadow-sm ml-1 ${
-              isProcessing || isRecording
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
-            }`}
-            title="Open Voice Chat (voice↔voice)"
-          >
-            <Headphones size={24} />
-          </button>
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isProcessing}
+                className={`p-3 rounded-xl transition-all shadow-md ${
+                  !input.trim() || isProcessing
+                    ? "bg-gray-200 text-gray-400 shadow-none cursor-not-allowed"
+                    : "bg-[#00BDB6] text-white hover:bg-[#00a8a2] shadow-[#00BDB6]/30"
+                }`}
+              >
+                <Send size={24} />
+              </button>
+              <button
+                onClick={() => setVoiceModalOpen(true)}
+                disabled={isProcessing || isRecording}
+                className={`p-3 rounded-xl transition-all shadow-sm ml-1 ${
+                  isProcessing || isRecording
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200"
+                }`}
+                title="Open Voice Chat (voice↔voice)"
+              >
+                <Headphones size={24} />
+              </button>
+            </div>
+          </div>
         </div>
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="p-3 rounded-xl transition-all shadow-sm bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200 absolute right-4 top-1/2 -translate-y-1/2"
+          title="Send Feedback"
+        >
+          Feedback
+        </button>
       </div>
 
       <DictionaryModal
@@ -363,6 +376,7 @@ const ChatPage = () => {
         onReplied={handleVoiceReplied}
       />
       <VocabularyModal isOpen={vocabOpen} onClose={() => setVocabOpen(false)} />
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </MainLayout>
   );
 };
