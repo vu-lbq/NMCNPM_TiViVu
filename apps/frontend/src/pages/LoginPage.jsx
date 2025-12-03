@@ -114,14 +114,14 @@ const LoginPage = () => {
           >
             {loading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
           </button>
-        {!isLogin && (
+        {isLogin && (
           <div className="mt-4 text-center">
             <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot your password?</a>
           </div>
         )}
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
           <button
             onClick={() => {
               setIsLogin(!isLogin);
@@ -131,6 +131,11 @@ const LoginPage = () => {
           >
             {isLogin ? "Need an account? Sign Up" : "Have an account? Login"}
           </button>
+          {!isLogin && (
+            <div>
+            <a href="/forgot-password" className="text-sm text-blue-600 hover:underline">Forgot your password?</a>
+            </div>
+          )}
         </div>
       </div>
     </div>

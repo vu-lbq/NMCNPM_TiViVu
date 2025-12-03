@@ -216,7 +216,7 @@ const ChatPage = () => {
           {messages.length === 0 ? (
             <div className="text-center opacity-60 mb-20">
               <h2 className="text-3xl font-bold text-[#1D2957] mb-3">
-                Hello, {user?.email || user?.username || "Learner"}
+                Hello, {user?.displayName || user?.email || user?.username || "Learner"}
               </h2>
               <p className="text-gray-600">Start speaking to practice your English!</p>
             </div>

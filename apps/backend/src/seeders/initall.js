@@ -24,7 +24,8 @@ module.exports = {
 					id,
 					// Store email in username field (backend treats username as email)
 					username: `user${i}@${domain}`,
-					passwordHash: bcrypt.hashSync(`pass${i}`, 10),
+					// Seed with 8-character passwords to match policy
+					passwordHash: bcrypt.hashSync('Pass1234', 10),
 					displayName: `User ${i}`,
 					createdAt: now,
 					updatedAt: now,
