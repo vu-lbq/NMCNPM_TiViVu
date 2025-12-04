@@ -15,10 +15,10 @@
     "dialect": "postgres"
   },
   "production": {
-    "username": "rblhyqcf",
-    "password": "haKazCS8aT2PDdTfDDVouEDUeo5x_Q9B",
-    "database": "TiViVu",
-    "host": "mahmud.db.elephantsql.com",
+    "username": "tivivu_user",
+    "password": "6ZkfnE1aoemRIHqBBFwjgvEHvmBaxGWj",
+    "database": "tivivu",
+    "host": "dpg-d4oohq2li9vc7387q9jg-a.singapore-postgres.render.com",
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": {
