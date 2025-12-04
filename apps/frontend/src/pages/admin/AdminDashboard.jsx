@@ -23,10 +23,10 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold">Admin Overview</h1>
-        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100" title="Back to TiviVu Chat">TiviVu</a>
+        <h1 className="text-2xl font-semibold text-[#1D2957]">Admin Overview</h1>
+        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100 border-gray-200 text-[#1D2957]" title="Back to TiviVu Chat">TiviVu</a>
       </div>
       {error && <p className="text-red-600 mb-3">{error}</p>}
       {stats ? (
@@ -43,8 +43,8 @@ export default function AdminDashboard() {
       )}
 
       <div className="mt-6 flex gap-3">
-        <a href="/admin/users" className="px-3 py-2 rounded bg-[#00BDB6] text-white">Manage Users</a>
-        <a href="/admin/feedback" className="px-3 py-2 rounded bg-white border">View Feedback</a>
+        <a href="/admin/users" className="px-3 py-2 rounded bg-[#00BDB6] text-white shadow-sm hover:bg-[#00a8a2]">Manage Users</a>
+        <a href="/admin/feedback" className="px-3 py-2 rounded bg-white border border-gray-200 text-[#1D2957] hover:bg-gray-100">View Feedback</a>
       </div>
     </div>
   );

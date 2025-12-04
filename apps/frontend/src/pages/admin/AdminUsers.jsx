@@ -36,27 +36,27 @@ export default function AdminUsers() {
   const toggle = async (id) => { await adminService.toggleRole(id); await load(); };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold">Manage Users</h1>
-        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100" title="Back to TiviVu Chat">TiviVu</a>
+        <h1 className="text-2xl font-semibold text-[#1D2957]">Manage Users</h1>
+        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100 border-gray-200 text-[#1D2957]" title="Back to TiviVu Chat">TiviVu</a>
       </div>
       {error && <p className="text-red-600 mb-3">{error}</p>}
 
       <form onSubmit={create} className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6">
-        <input className="border rounded px-3 py-2" placeholder="Email (username)" value={form.username} onChange={e=>setForm({...form, username:e.target.value})} required />
-        <input className="border rounded px-3 py-2" placeholder="Display Name" value={form.displayName} onChange={e=>setForm({...form, displayName:e.target.value})} />
-        <input className="border rounded px-3 py-2" placeholder="Password" type="password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})} required />
-        <select className="border rounded px-3 py-2" value={form.role} onChange={e=>setForm({...form, role:e.target.value})}>
+        <input className="border border-gray-200 rounded px-3 py-2 text-[#1D2957]" placeholder="Email (username)" value={form.username} onChange={e=>setForm({...form, username:e.target.value})} required />
+        <input className="border border-gray-200 rounded px-3 py-2 text-[#1D2957]" placeholder="Display Name" value={form.displayName} onChange={e=>setForm({...form, displayName:e.target.value})} />
+        <input className="border border-gray-200 rounded px-3 py-2 text-[#1D2957]" placeholder="Password" type="password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})} required />
+        <select className="border border-gray-200 rounded px-3 py-2 text-[#1D2957]" value={form.role} onChange={e=>setForm({...form, role:e.target.value})}>
           <option value="user">user</option>
           <option value="admin">admin</option>
         </select>
-        <button className="px-3 py-2 rounded bg-[#00BDB6] text-white">Create</button>
+        <button className="px-3 py-2 rounded bg-[#00BDB6] text-white hover:bg-[#00a8a2] shadow-sm">Create</button>
       </form>
 
-      <div className="overflow-auto border rounded">
+      <div className="overflow-auto border border-gray-200 rounded bg-white">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-[#00BDB6]/10">
             <tr>
               <th className="text-left p-2">Email</th>
               <th className="text-left p-2">Display Name</th>
@@ -68,13 +68,13 @@ export default function AdminUsers() {
           <tbody>
           {items.map(u => (
             <tr key={u.id} className="border-t">
-              <td className="p-2">{u.username}</td>
-              <td className="p-2">{u.displayName || '-'}</td>
-              <td className="p-2">{u.role}</td>
+              <td className="p-2 text-[#1D2957]">{u.username}</td>
+              <td className="p-2 text-[#1D2957]">{u.displayName || '-'}</td>
+              <td className="p-2 text-[#1D2957]">{u.role}</td>
               <td className="p-2">{new Date(u.createdAt).toLocaleString()}</td>
               <td className="p-2 space-x-2">
-                <button onClick={()=>toggle(u.id)} className="px-2 py-1 rounded border">Toggle Role</button>
-                <button onClick={()=>del(u.id)} className="px-2 py-1 rounded border text-red-600">Delete</button>
+                <button onClick={()=>toggle(u.id)} className="px-2 py-1 rounded border border-gray-200 text-[#1D2957] hover:bg-gray-100">Toggle Role</button>
+                <button onClick={()=>del(u.id)} className="px-2 py-1 rounded border border-gray-200 text-red-600 hover:bg-red-50">Delete</button>
               </td>
             </tr>
           ))}
