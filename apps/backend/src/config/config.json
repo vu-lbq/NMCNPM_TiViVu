@@ -1,11 +1,16 @@
 {
   "development": {
-    "username": "postgres",
-    "password": "postgres",
-    "database": "TiViVu",
-    "host": "localhost",
+    "username": "tivivu_user",
+    "password": "6ZkfnE1aoemRIHqBBFwjgvEHvmBaxGWj",
+    "database": "tivivu",
+    "host": "dpg-d4oohq2li9vc7387q9jg-a.singapore-postgres.render.com",
     "dialect": "postgres",
-    "port": 5432
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
   },
   "test": {
     "username": "postgres",
@@ -28,3 +33,5 @@
     }
   }
 }
+
+postgresql://tivivu_user:6ZkfnE1aoemRIHqBBFwjgvEHvmBaxGWj@dpg-d4oohq2li9vc7387q9jg-a.singapore-postgres.render.com/tivivu
