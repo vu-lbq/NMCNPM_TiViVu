@@ -36,11 +36,15 @@ export default function AdminUsers() {
   const toggle = async (id) => { await adminService.toggleRole(id); await load(); };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold text-[#1D2957]">Manage Users</h1>
-        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100 border-gray-200 text-[#1D2957]" title="Back to TiviVu Chat">TiviVu</a>
-      </div>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-xl font-bold text-[#1D2957] tracking-tight mb-4">
+        <a href="/" title="Back to TiviVu Chat">
+          Ti
+          <span className="text-[#00BDB6]">Vi</span>
+          Vu
+        </a>
+      </h1>
+      <h2 className="text-2xl font-semibold text-[#1D2957] mb-4">Manage Users</h2>
       {error && <p className="text-red-600 mb-3">{error}</p>}
 
       <form onSubmit={create} className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6">

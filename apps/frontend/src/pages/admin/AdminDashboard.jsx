@@ -23,11 +23,15 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold text-[#1D2957]">Admin Overview</h1>
-        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100 border-gray-200 text-[#1D2957]" title="Back to TiviVu Chat">TiviVu</a>
-      </div>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-xl font-bold text-[#1D2957] tracking-tight mb-4">
+        <a href="/" title="Back to TiviVu Chat">
+          Ti
+          <span className="text-[#00BDB6]">Vi</span>
+          Vu
+        </a>
+      </h1>
+      <h2 className="text-2xl font-semibold text-[#1D2957] mb-4">Admin Overview</h2>
       {error && <p className="text-red-600 mb-3">{error}</p>}
       {stats ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -44,7 +48,7 @@ export default function AdminDashboard() {
 
       <div className="mt-6 flex gap-3">
         <a href="/admin/users" className="px-3 py-2 rounded bg-[#00BDB6] text-white shadow-sm hover:bg-[#00a8a2]">Manage Users</a>
-        <a href="/admin/feedback" className="px-3 py-2 rounded bg-white border border-gray-200 text-[#1D2957] hover:bg-gray-100">View Feedback</a>
+        <a href="/admin/feedback" className="px-3 py-2 rounded border border-gray-200 text-[#1D2957] hover:bg-gray-100">View Feedback</a>
       </div>
     </div>
   );
