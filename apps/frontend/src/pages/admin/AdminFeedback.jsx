@@ -24,7 +24,10 @@ export default function AdminFeedback() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Feedback</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold">Feedback</h1>
+        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100" title="Back to TiviVu Chat">TiviVu</a>
+      </div>
       {error && <p className="text-red-600 mb-3">{error}</p>}
       <div className="space-y-3">
         {items.map(f => (

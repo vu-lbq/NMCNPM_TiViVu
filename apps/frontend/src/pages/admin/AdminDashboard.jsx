@@ -24,7 +24,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Admin Overview</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold">Admin Overview</h1>
+        <a href="/" className="text-sm px-3 py-2 rounded border bg-white hover:bg-gray-100" title="Back to TiviVu Chat">TiviVu</a>
+      </div>
       {error && <p className="text-red-600 mb-3">{error}</p>}
       {stats ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
