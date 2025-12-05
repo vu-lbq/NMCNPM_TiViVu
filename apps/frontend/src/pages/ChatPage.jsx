@@ -15,11 +15,12 @@ const ChatPage = () => {
   const {
     isListening,
     transcript,
+    interimTranscript,
     startListening,
     stopListening,
     setTranscript,
     hasBrowserSTT,
-  } = useSpeechRecognition();
+  } = useSpeechRecognition({ language: (sttLanguage === 'vi' ? 'vi-VN' : 'en-US') });
   const { speak } = useTextToSpeech();
 
   const [input, setInput] = useState("");
@@ -41,9 +42,10 @@ const ChatPage = () => {
   const [sttLanguage, setSttLanguage] = useState('en');
 
   useEffect(() => {
-    if (transcript) setInput((prev) => (prev ? prev + " " : "") + transcript);
+    // Commit finalized transcript from browser STT by replacing input,
+    // avoiding duplication between interim and final segments.
+    if (transcript) setInput(transcript);
   }, [transcript]);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -58,56 +60,6 @@ const ChatPage = () => {
     setConversationId(cid);
     return cid;
   };
-
-  const loadMessages = async (cid) => {
-    if (!cid) return;
-    const result = await chatService.listMessages(cid);
-    const items = result?.messages || result || [];
-    const mapped = items.map((m) => ({
-      text: m.content || m.text || "",
-      role: m.role || "user",
-      timestamp: m.createdAt ? new Date(m.createdAt) : new Date(),
-    }));
-    setMessages(mapped);
-  };
-
-  const handleSend = async () => {
-    if (!input.trim() || isProcessing) return;
-
-    const userMsg = { text: input, role: "user", timestamp: new Date() };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setTranscript("");
-    setIsProcessing(true);
-
-    try {
-      const cid = await ensureConversation();
-      const controller = new AbortController();
-      setInflight(controller);
-      await chatService.sendMessage(cid, userMsg.text, { signal: controller.signal });
-      await loadMessages(cid);
-      setSidebarRefreshKey((k) => k + 1);
-    } catch (error) {
-      console.error("Chat error:", error);
-    } finally {
-      setIsProcessing(false);
-      setInflight(null);
-    }
-  };
-
-  const handleCancel = async () => {
-    try {
-      if (inflight) inflight.abort();
-    } catch {
-      // ignore abort errors
-    }
-    setIsProcessing(false);
-    setInflight(null);
-    try {
-      if (conversationId) await loadMessages(conversationId);
-    } catch {
-      // ignore reload errors
-    }
   };
 
   // Auto-resize input up to ~4 lines, then scroll
@@ -349,7 +301,7 @@ const ChatPage = () => {
             />
             {isListening && !isProcessing && (
               <p className="text-xs text-[#00BDB6] animate-pulse px-1 absolute top-1 font-medium">
-                {transcript}
+                {interimTranscript}
               </p>
             )}
           </div>
