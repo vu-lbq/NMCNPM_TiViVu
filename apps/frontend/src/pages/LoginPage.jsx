@@ -18,6 +18,7 @@ const LoginPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,8 +30,8 @@ const LoginPage = () => {
     }
 
     const result = isLogin
-      ? await login(email, password)
-      : await register(email, password, displayName);
+      ? await login(email, password, rememberMe)
+      : await register(email, password, displayName, rememberMe);
     if (!result.success) {
       setError(result.error || "Login failed");
     } else {
@@ -114,6 +115,17 @@ const LoginPage = () => {
                 />
               </div>
             </div>
+          )}
+
+          {isLogin && (
+            <label className="flex items-center gap-2 text-sm text-[#1D2957]">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              Remember me (stay signed in)
+            </label>
           )}
 
           <button
