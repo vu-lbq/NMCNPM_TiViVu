@@ -3,16 +3,20 @@
 const OpenAI = require("openai");
 const { Message } = require("../models");
 
+// Initialize OpenAI client
 function getClient() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("Missing OPENAI_API_KEY in environment");
   return new OpenAI({ apiKey });
 }
 
+// Determine AI provider: 'openai' or 'openrouter'
 function provider() {
   return (process.env.AI_PROVIDER || 'openai').toLowerCase();
 }
 
+// Get headers for OpenRouter API requests
+// From OpenAI docs: https://docs.openrouter.ai/docs/api/authentication
 function getOpenRouterHeaders() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("Missing OPENROUTER_API_KEY in environment");
@@ -26,6 +30,8 @@ function getOpenRouterHeaders() {
   return headers;
 }
 
+// Build chat history from messages in a conversation
+// Limit to the most recent 'limit' messages
 async function buildChatHistory(conversationId, limit = 10) {
   const rows = await Message.findAll({
     where: { conversationId },
@@ -61,20 +67,27 @@ Khả năng & Phong cách
 Danh tính & Bối cảnh
 - Bạn được phát triển bởi 3 lập trình viên: Tín, Vũ, Việt. Ngày ra đời: 01.12.2025.`;
 
+// Generate assistant reply based on conversation history and user input
+// Options can include extraSystemPrompt and maxTokens
+//  - extraSystemPrompt: additional system prompt content to include
 async function generateAssistantReply(conversationId, userContent, options = {}) {
   const p = provider();
   const history = await buildChatHistory(conversationId, 12);
-  const extraSystem = options && options.extraSystemPrompt
+  const extraSystem = options && options.extraSystemPrompt // Extra system prompt if provided
     ? [{ role: 'system', content: String(options.extraSystemPrompt) }]
     : [];
+  // Construct messages array, including system prompt, history, and user input
   const messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...extraSystem, ...history, { role: "user", content: userContent }];
+  // Determine max tokens, defaulting to env var if not specified, or undefined
+  // OPENAI_MAX_TOKENS=192 currently set in .env is used for faster responses
   const maxTokens = (options && options.maxTokens != null)
     ? Number(options.maxTokens)
     : (Number(process.env.OPENAI_MAX_TOKENS || 0) || undefined);
-
+  // Call appropriate provider API, handle response
   if (p === 'openrouter') {
     const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
     const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      // from OpenAI docs: https://docs.openrouter.ai/docs/api/chat/completions
       method: 'POST',
       headers: getOpenRouterHeaders(),
       body: JSON.stringify({
@@ -84,6 +97,7 @@ async function generateAssistantReply(conversationId, userContent, options = {})
         max_tokens: maxTokens,
       })
     });
+    // Handle non-OK responses, throw error with details
     if (!resp.ok) {
       const errText = await resp.text();
       throw new Error(`OpenRouter error ${resp.status}: ${errText}`);
@@ -94,18 +108,20 @@ async function generateAssistantReply(conversationId, userContent, options = {})
   }
 
   // default: openai
+  // Call OpenAI API for chat completions
   const client = getClient();
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const resp = await client.chat.completions.create({
     model,
     messages,
     temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7),
-    max_tokens: maxTokens,
+    max_tokens: maxTokens, // currently set in .env for faster responses
   });
   const text = resp?.choices?.[0]?.message?.content || "";
   return text.trim();
 }
 
+// Simple prompt function without conversation history
 async function simplePrompt(promptText) {
   const p = provider();
   if (p === 'openrouter') {
@@ -141,6 +157,9 @@ async function simplePrompt(promptText) {
   return text.trim();
 }
 
+// Generate a concise conversation title based on chat history
+// Uses up to the last 8 messages to derive context
+// Returns a sanitized title string
 async function generateConversationTitle(conversationId) {
   const history = await buildChatHistory(conversationId, 8);
   const snippet = history.map(m => `${m.role}: ${m.content}`).join("\n");
@@ -176,10 +195,13 @@ async function generateConversationTitle(conversationId) {
     temperature: Number(process.env.OPENAI_TEMPERATURE || 0.2),
     max_tokens: Number(process.env.OPENAI_MAX_TOKENS_TITLE || process.env.OPENAI_MAX_TOKENS || 64),
   });
+  // Extract and sanitize title from response
   const text = (resp?.choices?.[0]?.message?.content || '').trim();
   return sanitizeTitle(text);
 }
 
+
+// function to sanitize and clean up generated titles
 function sanitizeTitle(str) {
   if (!str) return 'Conversation';
   let s = str.replace(/^"|"$/g, '').trim();
@@ -191,7 +213,7 @@ function sanitizeTitle(str) {
 }
 
 module.exports = {
-  generateAssistantReply,
-  simplePrompt,
-  generateConversationTitle,
+  generateAssistantReply,     // main function to generate AI replies
+  simplePrompt,               // simple prompt without history  
+  generateConversationTitle,  // generate a concise conversation title based on chat history
 };

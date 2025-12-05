@@ -1,7 +1,7 @@
 'use strict';
-
+// Service for sending emails using Mailjet
 const Mailjet = require('node-mailjet');
-
+// Initialize Mailjet client with API keys from environment variables
 function getMailjetClient() {
   const { MJ_APIKEY_PUBLIC, MJ_APIKEY_PRIVATE } = process.env;
   if (!MJ_APIKEY_PUBLIC || !MJ_APIKEY_PRIVATE) {
@@ -9,7 +9,8 @@ function getMailjetClient() {
   }
   return Mailjet.apiConnect(MJ_APIKEY_PUBLIC, MJ_APIKEY_PRIVATE);
 }
-
+// Send a "Forgot Password" email with reset link
+// to the specified email address, using Mailjet, with basic HTML content
 async function sendForgotPasswordMail({ toEmail, toName, host, resetLink }) {
   const mailjet = getMailjetClient();
   const request = mailjet.post('send', { version: 'v3.1' }).request({

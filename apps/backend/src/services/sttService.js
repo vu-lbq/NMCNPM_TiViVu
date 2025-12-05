@@ -1,6 +1,8 @@
 const fs = require('fs');
 
 // Uses OpenAI Whisper (`whisper-1`) transcription via the Audio API
+// OPENAI Whisper docs: https://platform.openai.com/docs/api-reference/audio/create-transcriptions
+// this function is used for speech-to-text transcription of audio files
 async function transcribe({ filePath, openaiClient, model = 'whisper-1', language }) {
   if (!openaiClient) throw new Error('OpenAI client not configured');
   if (!filePath || !fs.existsSync(filePath)) throw new Error('Audio file missing');
