@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 
 const LoginPage = () => {
   const { login, register, loading } = useAuth();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,9 @@ const LoginPage = () => {
       ? await login(email, password)
       : await register(email, password, displayName);
     if (!result.success) {
-      setError(result.error);
+      setError(result.error || "Login failed");
+    } else {
+      navigate("/chat", { replace: true });
     }
   };
 
