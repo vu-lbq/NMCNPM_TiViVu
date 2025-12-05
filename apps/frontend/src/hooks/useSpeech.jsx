@@ -116,23 +116,26 @@ export const useTextToSpeech = () => {
     const voices = voicesRef.current || [];
     if (!voices.length) return null;
 
+    const normalize = (tag) => tag.replace("_", "-").toLowerCase();
+
     if (langShortCode === "vi") {
       return (
-        voices.find((v) => v.lang === "vi-VN") ||
-        voices.find((v) => /vietnam/i.test(v.name))
+        voices.find((v) => normalize(v.lang) === "vi-vn") ||
+        voices.find((v) => v.name.toLowerCase().includes("vietnam"))
       );
     } else {
       let usVoice = voices.find(
-        (v) => v.lang === "en-US" && !v.name.includes("Zira")
+        (v) => normalize(v.lang) === "en-us" && !v.name.includes("Zira")
       );
-      if (!usVoice) usVoice = voices.find((v) => v.lang === "en-US");
-      if (!usVoice) usVoice = voices.find((v) => v.lang.startsWith("en"));
+      if (!usVoice) usVoice = voices.find((v) => normalize(v.lang) === "en-us");
+      if (!usVoice)
+        usVoice = voices.find((v) => normalize(v.lang).startsWith("en"));
       return usVoice;
     }
   };
 
   const speak = (text) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
@@ -152,7 +155,11 @@ export const useTextToSpeech = () => {
       // Rate adjustments: Vietnamese often shorter—slightly slower for clarity
       utterance.rate = langCode === "vi" ? 0.95 : 0.9;
       const voice = pickVoice(langCode);
-      if (voice) utterance.voice = voice;
+      if (voice) {
+        utterance.voice = voice;
+      } else {
+        utterance.voice = null;
+      }
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.error("TTS speak error:", e);
