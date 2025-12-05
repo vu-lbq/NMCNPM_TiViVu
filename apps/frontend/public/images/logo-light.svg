@@ -1,0 +1,13 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+    <!-- Text Group -->
+    <text x="10" y="45" font-family="'Segoe UI', sans-serif" font-weight="800" font-size="48" fill="#1D2957" letter-spacing="-1">
+        Ti<tspan fill="#00BDB6">Vi</tspan>Vu
+    </text>
+    <!-- Tagline -->
+    <text x="12" y="58" font-family="'Segoe UI', sans-serif" font-weight="500" font-size="8" fill="#6B7280" letter-spacing="1">
+        ENGLISH LEARNING PLATFORM
+    </text>
+    <!-- Simple Chat Bubble Accent -->
+    <circle cx="175" cy="15" r="4" fill="#00BDB6" opacity="0.6"/>
+    <circle cx="185" cy="22" r="6" fill="#1D2957" opacity="0.8"/>
+</svg>

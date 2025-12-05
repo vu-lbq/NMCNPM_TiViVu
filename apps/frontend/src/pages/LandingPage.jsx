@@ -6,24 +6,32 @@ import Carousel from '../components/Carousel';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="p-4">
-        <h1 className="text-sm font-medium">
-          <Link to="/login" className="text-[#1D2957] hover:underline">Sign in</Link>
-          <span className="mx-2 text-gray-300">•</span>
-          <Link to="/login" className="text-[#00BDB6] hover:underline">Sign up</Link>
-        </h1>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <header className="w-full bg-white/50 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-end items-center gap-3">
+          <Link 
+            to="/login" 
+            className="px-5 py-2.5 bg-[#1D2957] text-white text-sm font-semibold rounded-lg hover:bg-[#151f42] transition-all shadow-sm hover:shadow-md"
+          >
+            Sign in
+          </Link>
+          
+          <Link 
+            to="/login" 
+            className="px-5 py-2.5 bg-[#00BDB6] text-white text-sm font-semibold rounded-lg hover:bg-[#00a8a2] transition-all shadow-sm hover:shadow-md"
+          >
+            Sign up
+          </Link>
+        </div>
       </header>
 
       <main className="flex-1">
         <div className="px-4">
-          <h1 className="text-xl font-bold text-[#1D2957] tracking-tight max-w-6xl mx-auto mb-2">
-            <Link to="/" title="TiviVu">
-              Ti
-              <span className="text-[#00BDB6]">Vi</span>
-              Vu
+          <div className="max-w-6xl mx-auto mb-8 mt-6">
+            <Link to="/" title="TiviVu" className="flex items-center gap-1">
+              <img src="../../public/images/logo-light.svg" alt="" />
             </Link>
-          </h1>
+          </div>
         </div>
         <Hero />
         <div className="max-w-6xl mx-auto px-4">
