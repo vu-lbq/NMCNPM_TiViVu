@@ -36,9 +36,7 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="p-4 text-center text-xs text-gray-500">
-        <Link to="/chat" className="text-[#1D2957] hover:underline">Go to App</Link>
-      </footer>
+      {/* Footer intentionally left without direct app link; access after login */}
     </div>
   );
 }

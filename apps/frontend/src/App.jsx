@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AuthProvider from "./context/AuthProvider";
 import { useAuth } from "./context/useAuth";
 import ChatPage from "./pages/ChatPage";
@@ -11,8 +11,21 @@ import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import AdminFeedback from "./pages/admin/AdminFeedback.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 
-const AppRoutes = () => {
+const RequireAuth = ({ children }) => {
   const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
+
+const AppRoutes = () => {
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -31,7 +44,7 @@ const AppRoutes = () => {
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUsers />} />
       <Route path="/admin/feedback" element={<AdminFeedback />} />
-      <Route path="/chat" element={<ChatPage />} />
+      <Route path="/chat" element={<RequireAuth><ChatPage /></RequireAuth>} />
     </Routes>
   );
 };
