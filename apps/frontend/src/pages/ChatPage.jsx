@@ -15,12 +15,11 @@ const ChatPage = () => {
   const {
     isListening,
     transcript,
-    interimTranscript,
     startListening,
     stopListening,
     setTranscript,
     hasBrowserSTT,
-  } = useSpeechRecognition({ language: (sttLanguage === 'vi' ? 'vi-VN' : 'en-US') });
+  } = useSpeechRecognition();
   const { speak } = useTextToSpeech();
 
   const [input, setInput] = useState("");
@@ -352,7 +351,7 @@ const ChatPage = () => {
             />
             {isListening && !isProcessing && (
               <p className="text-xs text-[#00BDB6] animate-pulse px-1 absolute top-1 font-medium">
-                {interimTranscript}
+                {transcript}
               </p>
             )}
           </div>

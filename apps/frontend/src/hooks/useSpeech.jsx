@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { sanitizeStt } from "../utils/sttSanitize";
 
-export const useSpeechRecognition = (options = {}) => {
-  const { language = "en-US" } = options;
+export const useSpeechRecognition = () => {
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState(""); // committed final text
-  const [interimTranscript, setInterimTranscript] = useState(""); // live interim
+  const [transcript, setTranscript] = useState("");
   const recognitionRef = useRef(null);
   const initialHas = typeof window !== 'undefined' && ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
   const [hasBrowserSTT] = useState(initialHas);
@@ -17,30 +14,14 @@ export const useSpeechRecognition = (options = {}) => {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = language;
+      recognition.lang = "en-US";
 
       recognition.onresult = (event) => {
-        // Build interim string and commit only finalized alternatives
-        let interim = "";
-        let finalAppend = "";
+        let currentTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          const text = result[0].transcript;
-          if (result.isFinal) {
-            finalAppend += text;
-          } else {
-            interim += text;
-          }
+          currentTranscript += event.results[i][0].transcript;
         }
-        // Update interim live (not persisted)
-        setInterimTranscript(interim);
-        // Commit final once by appending to the existing transcript
-        if (finalAppend && finalAppend.trim().length > 0) {
-          setTranscript(prev => {
-            const combined = (prev ? prev + " " : "") + finalAppend.trim();
-            return sanitizeStt(combined);
-          });
-        }
+        setTranscript(currentTranscript);
       };
 
       recognition.onerror = (event) => {
@@ -48,17 +29,13 @@ export const useSpeechRecognition = (options = {}) => {
         setIsListening(false);
       };
 
-      recognition.onend = () => {
-        setIsListening(false);
-        setInterimTranscript("");
-      };
+      recognition.onend = () => setIsListening(false);
       recognitionRef.current = recognition;
     }
-  }, [hasBrowserSTT, language]);
+  }, [hasBrowserSTT]);
 
   const startListening = () => {
     setTranscript("");
-    setInterimTranscript("");
     recognitionRef.current?.start();
     setIsListening(true);
   };
@@ -71,11 +48,9 @@ export const useSpeechRecognition = (options = {}) => {
   return {
     isListening,
     transcript,
-    interimTranscript,
     startListening,
     stopListening,
     setTranscript,
-    setInterimTranscript,
     hasBrowserSTT,
   };
 };
