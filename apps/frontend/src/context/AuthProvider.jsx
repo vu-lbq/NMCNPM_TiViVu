@@ -5,6 +5,7 @@ import { authService } from "../services/api";
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [bootstrapping, setBootstrapping] = useState(true);
 
   useEffect(() => {
     // Bootstrap auth from persistent or session storage
@@ -14,6 +15,7 @@ const AuthProvider = ({ children }) => {
     if (raw) {
       try { setUser(JSON.parse(raw)); } catch { /* ignore */ }
     }
+    setBootstrapping(false);
   }, []);
 
   const login = async (email, password, remember = true) => {
@@ -61,7 +63,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, bootstrapping }}>
       {children}
     </AuthContext.Provider>
   );

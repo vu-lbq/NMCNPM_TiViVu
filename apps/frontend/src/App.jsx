@@ -12,8 +12,8 @@ import AdminFeedback from "./pages/admin/AdminFeedback.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 
 const RequireAuth = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) {
+  const { user, bootstrapping } = useAuth();
+  if (bootstrapping) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -25,9 +25,9 @@ const RequireAuth = ({ children }) => {
 };
 
 const AppRoutes = () => {
-  const { loading } = useAuth();
+  const { bootstrapping } = useAuth();
 
-  if (loading) {
+  if (bootstrapping) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
