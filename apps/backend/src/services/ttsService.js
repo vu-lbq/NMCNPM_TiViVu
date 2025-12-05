@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Simple language detection for Vietnamese vs English based on diacritics
+// Phát hiện ngôn ngữ đơn giản (Việt/Anh) dựa trên dấu tiếng Việt
 function detectLanguage(text) {
   if (!text) return 'en';
   const viChars = text.match(/[ăâđêôơưĂÂĐÊÔƠƯàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ]/g);
@@ -10,26 +10,24 @@ function detectLanguage(text) {
   return 'en';
 }
 
-// Maps language code to a voice name; configurable via env
-// If requested voice is provided and not 'auto', use it directly
-// Otherwise, pick based on language with fallbacks, using env vars or defaults
+// mã ngôn ngữ sang tên giọng đọc; cấu hình qua biến môi trường
 function pickVoice(lang, requested) {
   if (requested && requested !== 'auto') return requested;
   if (lang === 'vi') return process.env.OPENAI_VOICE_VI || process.env.OPENAI_VOICE_DEFAULT || 'alloy';
   return process.env.OPENAI_VOICE_EN || process.env.OPENAI_VOICE_DEFAULT || 'alloy';
 }
 
-// Uses OpenAI TTS via the Audio API (GPT-4o-mini-tts) when available
-// Fallback: return plain text buffer if TTS API not available
-// OPENAI TTS docs: https://platform.openai.com/docs/api-reference/audio/speech/create-speech
+// Sử dụng OpenAI TTS qua Audio API (GPT-4o-mini-tts) khi khả dụng
+// Dự phòng: trả về buffer văn bản nếu TTS API không khả dụng
+// Tài liệu TTS: https://platform.openai.com/docs/api-reference/audio/speech/create-speech
 async function synthesize({ text, voice = 'alloy', format = 'mp3', openaiClient, language }) {
   if (!openaiClient) throw new Error('OpenAI client not configured');
   try {
-    // Determine language and pick voice, if needed
+    // Xác định ngôn ngữ và chọn giọng đọc nếu cần
     const lang = language || detectLanguage(text);
-    // Pick voice based on language and requested voice
+    // Chọn giọng đọc dựa trên ngôn ngữ và voice yêu cầu
     const resolvedVoice = pickVoice(lang, voice);
-    // Call OpenAI TTS API, if available, to get audio buffer
+    // Gọi OpenAI TTS API (nếu có) để nhận buffer âm thanh
     if (openaiClient.audio && openaiClient.audio.speech && typeof openaiClient.audio.speech.create === 'function') {
       const resp = await openaiClient.audio.speech.create({
         model: process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts', // default TTS model is gpt-4o-mini-tts
@@ -37,14 +35,14 @@ async function synthesize({ text, voice = 'alloy', format = 'mp3', openaiClient,
         input: text,
         format,
       });
-      // The response is a ReadableStream; convert to Buffer
+      // Phản hồi là ReadableStream; chuyển sang Buffer
       const arrayBuffer = await resp.arrayBuffer();
-      // Convert ArrayBuffer to Buffer, return with content type
+      // Chuyển ArrayBuffer thành Buffer, trả về kèm content type
       const buffer = Buffer.from(arrayBuffer);
-      // Return audio buffer and content type, based on format
+      // Trả về buffer âm thanh và content type theo định dạng
       return { buffer, contentType: format === 'wav' ? 'audio/wav' : `audio/${format}` };
     }
-    // Fallback: return text if TTS API not available
+    // Dự phòng: trả về văn bản nếu TTS API không khả dụng
     return { buffer: Buffer.from(text, 'utf8'), contentType: 'text/plain' };
   } catch (err) {
     throw err;

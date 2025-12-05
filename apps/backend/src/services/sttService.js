@@ -1,8 +1,8 @@
 const fs = require('fs');
 
-// Uses OpenAI Whisper (`whisper-1`) transcription via the Audio API
-// OPENAI Whisper docs: https://platform.openai.com/docs/api-reference/audio/create-transcriptions
-// this function is used for speech-to-text transcription of audio files
+// Sử dụng OpenAI Whisper (`whisper-1`) để chuyển giọng nói thành văn bản qua Audio API
+// Tài liệu Whisper: https://platform.openai.com/docs/api-reference/audio/create-transcriptions
+// Hàm này dùng để chuyển đổi audio (STT - speech-to-text)
 async function transcribe({ filePath, openaiClient, model = 'whisper-1', language }) {
   if (!openaiClient) throw new Error('OpenAI client not configured');
   if (!filePath || !fs.existsSync(filePath)) throw new Error('Audio file missing');
@@ -12,10 +12,10 @@ async function transcribe({ filePath, openaiClient, model = 'whisper-1', languag
       const args = { file, model };
       if (language && language !== 'auto') args.language = language;
       const resp = await openaiClient.audio.transcriptions.create(args);
-      // OpenAI SDK returns an object with `text`
+      // OpenAI SDK trả về đối tượng có thuộc tính `text`
       return { text: resp.text || resp?.data?.text || '' };
     }
-    // Fallback: just say unsupported
+    // Dự phòng: thông báo chưa hỗ trợ
     return { text: '[stt unavailable: install OpenAI audio API]' };
   } catch (err) {
     throw err;

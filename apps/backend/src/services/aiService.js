@@ -3,20 +3,20 @@
 const OpenAI = require("openai");
 const { Message } = require("../models");
 
-// Initialize OpenAI client
+// Khởi tạo client OpenAI
 function getClient() {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("Missing OPENAI_API_KEY in environment");
   return new OpenAI({ apiKey });
 }
 
-// Determine AI provider: 'openai' or 'openrouter'
+// Xác định nhà cung cấp AI: 'openai' hoặc 'openrouter'
 function provider() {
   return (process.env.AI_PROVIDER || 'openai').toLowerCase();
 }
 
-// Get headers for OpenRouter API requests
-// From OpenAI docs: https://docs.openrouter.ai/docs/api/authentication
+// Lấy header cho các yêu cầu API OpenRouter
+// Theo tài liệu OpenRouter: https://docs.openrouter.ai/docs/api/authentication
 function getOpenRouterHeaders() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("Missing OPENROUTER_API_KEY in environment");
@@ -30,8 +30,8 @@ function getOpenRouterHeaders() {
   return headers;
 }
 
-// Build chat history from messages in a conversation
-// Limit to the most recent 'limit' messages
+// Tạo lịch sử trò chuyện từ các tin nhắn trong một cuộc hội thoại
+// Giới hạn ở 'limit' tin nhắn gần nhất
 async function buildChatHistory(conversationId, limit = 10) {
   const rows = await Message.findAll({
     where: { conversationId },
@@ -42,7 +42,7 @@ async function buildChatHistory(conversationId, limit = 10) {
   return trimmed.map((m) => ({ role: m.role, content: m.content }));
 }
 
-// System prompt to provide app context to the AI for all conversations
+// System prompt cung cấp ngữ cảnh ứng dụng cho AI trong mọi cuộc hội thoại
 const SYSTEM_PROMPT = `Bạn là một chuyên gia ngôn ngữ Anh tên TiViVu, trợ lý học tập cho mọi trình độ.
 
 Mục tiêu & Phạm vi
@@ -67,23 +67,23 @@ Khả năng & Phong cách
 Danh tính & Bối cảnh
 - Bạn được phát triển bởi 3 lập trình viên: Tín, Vũ, Việt. Ngày ra đời: 01.12.2025.`;
 
-// Generate assistant reply based on conversation history and user input
-// Options can include extraSystemPrompt and maxTokens
-//  - extraSystemPrompt: additional system prompt content to include
+// Tạo phản hồi của trợ lý dựa trên lịch sử hội thoại và nội dung người dùng
+// Tuỳ chọn gồm extraSystemPrompt và maxTokens
+//  - extraSystemPrompt: thêm nội dung system prompt bổ sung
 async function generateAssistantReply(conversationId, userContent, options = {}) {
   const p = provider();
   const history = await buildChatHistory(conversationId, 12);
   const extraSystem = options && options.extraSystemPrompt // Extra system prompt if provided
     ? [{ role: 'system', content: String(options.extraSystemPrompt) }]
     : [];
-  // Construct messages array, including system prompt, history, and user input
+  // Tạo mảng messages: gồm system prompt, lịch sử và đầu vào người dùng
   const messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...extraSystem, ...history, { role: "user", content: userContent }];
-  // Determine max tokens, defaulting to env var if not specified, or undefined
-  // OPENAI_MAX_TOKENS=192 currently set in .env is used for faster responses
+  // Xác định số token tối đa; mặc định theo biến môi trường nếu không chỉ định
+  // OPENAI_MAX_TOKENS=192 trong .env dùng để phản hồi nhanh hơn
   const maxTokens = (options && options.maxTokens != null)
     ? Number(options.maxTokens)
     : (Number(process.env.OPENAI_MAX_TOKENS || 0) || undefined);
-  // Call appropriate provider API, handle response
+  // Gọi API nhà cung cấp tương ứng và xử lý phản hồi
   if (p === 'openrouter') {
     const model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
     const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -97,7 +97,7 @@ async function generateAssistantReply(conversationId, userContent, options = {})
         max_tokens: maxTokens,
       })
     });
-    // Handle non-OK responses, throw error with details
+    // Xử lý phản hồi không OK, ném lỗi kèm chi tiết
     if (!resp.ok) {
       const errText = await resp.text();
       throw new Error(`OpenRouter error ${resp.status}: ${errText}`);
@@ -107,8 +107,8 @@ async function generateAssistantReply(conversationId, userContent, options = {})
     return text.trim();
   }
 
-  // default: openai
-  // Call OpenAI API for chat completions
+  // Mặc định: dùng OpenAI
+  // Gọi OpenAI API để tạo chat completion
   const client = getClient();
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const resp = await client.chat.completions.create({
@@ -121,7 +121,7 @@ async function generateAssistantReply(conversationId, userContent, options = {})
   return text.trim();
 }
 
-// Simple prompt function without conversation history
+// Hàm prompt đơn giản không dùng lịch sử cuộc hội thoại
 async function simplePrompt(promptText) {
   const p = provider();
   if (p === 'openrouter') {
@@ -157,9 +157,9 @@ async function simplePrompt(promptText) {
   return text.trim();
 }
 
-// Generate a concise conversation title based on chat history
-// Uses up to the last 8 messages to derive context
-// Returns a sanitized title string
+// Tạo tiêu đề ngắn gọn cho cuộc trò chuyện dựa trên lịch sử
+// Sử dụng tối đa 8 tin nhắn gần nhất để lấy ngữ cảnh
+// Trả về chuỗi tiêu đề đã được làm sạch
 async function generateConversationTitle(conversationId) {
   const history = await buildChatHistory(conversationId, 8);
   const snippet = history.map(m => `${m.role}: ${m.content}`).join("\n");
@@ -195,13 +195,13 @@ async function generateConversationTitle(conversationId) {
     temperature: Number(process.env.OPENAI_TEMPERATURE || 0.2),
     max_tokens: Number(process.env.OPENAI_MAX_TOKENS_TITLE || process.env.OPENAI_MAX_TOKENS || 64),
   });
-  // Extract and sanitize title from response
+  // Trích xuất và làm sạch tiêu đề từ phản hồi
   const text = (resp?.choices?.[0]?.message?.content || '').trim();
   return sanitizeTitle(text);
 }
 
 
-// function to sanitize and clean up generated titles
+// Hàm làm sạch và tinh chỉnh tiêu đề được tạo
 function sanitizeTitle(str) {
   if (!str) return 'Conversation';
   let s = str.replace(/^"|"$/g, '').trim();
@@ -213,7 +213,7 @@ function sanitizeTitle(str) {
 }
 
 module.exports = {
-  generateAssistantReply,     // main function to generate AI replies
-  simplePrompt,               // simple prompt without history  
-  generateConversationTitle,  // generate a concise conversation title based on chat history
+  generateAssistantReply,     // hàm chính tạo phản hồi AI
+  simplePrompt,               // prompt đơn giản không dùng lịch sử  
+  generateConversationTitle,  // tạo tiêu đề ngắn gọn dựa trên lịch sử trò chuyện
 };
