@@ -52,7 +52,7 @@ const LoginPage = () => {
               type="email"
               required
               inputMode="email"
-              pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$"
+              pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
               title="Please enter a valid email address"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#00BDB6] outline-none"
               value={email}
@@ -67,8 +67,7 @@ const LoginPage = () => {
               type="password"
               required
               minLength={8}
-              pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+=\-]{8,}$"
-              title="Minimum 8 characters, include letters and numbers"
+              title="Minimum 8 characters"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#00BDB6] outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -97,8 +96,7 @@ const LoginPage = () => {
                   type="password"
                   required
                   minLength={8}
-                  pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+=\-]{8,}$"
-                  title="Minimum 8 characters, include letters and numbers"
+                  title="Minimum 8 characters"
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#00BDB6] outline-none"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
