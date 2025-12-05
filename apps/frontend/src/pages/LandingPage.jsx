@@ -29,7 +29,7 @@ export default function LandingPage() {
         <div className="px-4">
           <div className="max-w-6xl mx-auto mb-8 mt-6">
             <Link to="/" title="TiviVu" className="flex items-center gap-1">
-              <img src="../../public/images/logo-light.svg" alt="" />
+              <img src="/images/logo-light.svg" alt="" />
             </Link>
           </div>
         </div>

@@ -42,12 +42,9 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 border-t-4 border-[#00BDB6]">
-        <h1 className="text-3xl font-bold text-center text-[#1D2957] mb-2">
-          Ti<span className="text-[#00BDB6]">Vi</span>Vu
-        </h1>
-        <p className="text-center text-gray-500 mb-8">
-          English Learning Assistant
-        </p>
+        <div className="pb-6">
+          <img src="/images/logo-light.svg" alt="" className="block mx-auto"/>
+        </div>
 
         {error && (
           <div className="bg-red-50 text-red-500 p-3 rounded mb-4 text-sm border border-red-100">
