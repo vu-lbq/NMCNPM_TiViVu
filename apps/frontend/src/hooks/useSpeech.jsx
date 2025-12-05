@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { sanitizeStt } from "../utils/sttSanitize";
 
-export const useSpeechRecognition = () => {
+export const useSpeechRecognition = (options = {}) => {
+  const { language = "en-US" } = options;
   const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
+  const [transcript, setTranscript] = useState(""); // committed final text
+  const [interimTranscript, setInterimTranscript] = useState(""); // live interim
   const recognitionRef = useRef(null);
   const initialHas = typeof window !== 'undefined' && ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
   const [hasBrowserSTT] = useState(initialHas);
@@ -14,14 +17,30 @@ export const useSpeechRecognition = () => {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = "en-US";
+      recognition.lang = language;
 
       recognition.onresult = (event) => {
-        let currentTranscript = "";
+        // Build interim string and commit only finalized alternatives
+        let interim = "";
+        let finalAppend = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript;
+          const result = event.results[i];
+          const text = result[0].transcript;
+          if (result.isFinal) {
+            finalAppend += text;
+          } else {
+            interim += text;
+          }
         }
-        setTranscript(currentTranscript);
+        // Update interim live (not persisted)
+        setInterimTranscript(interim);
+        // Commit final once by appending to the existing transcript
+        if (finalAppend && finalAppend.trim().length > 0) {
+          setTranscript(prev => {
+            const combined = (prev ? prev + " " : "") + finalAppend.trim();
+            return sanitizeStt(combined);
+          });
+        }
       };
 
       recognition.onerror = (event) => {
@@ -29,13 +48,17 @@ export const useSpeechRecognition = () => {
         setIsListening(false);
       };
 
-      recognition.onend = () => setIsListening(false);
+      recognition.onend = () => {
+        setIsListening(false);
+        setInterimTranscript("");
+      };
       recognitionRef.current = recognition;
     }
-  }, [hasBrowserSTT]);
+  }, [hasBrowserSTT, language]);
 
   const startListening = () => {
     setTranscript("");
+    setInterimTranscript("");
     recognitionRef.current?.start();
     setIsListening(true);
   };
@@ -48,9 +71,11 @@ export const useSpeechRecognition = () => {
   return {
     isListening,
     transcript,
+    interimTranscript,
     startListening,
     stopListening,
     setTranscript,
+    setInterimTranscript,
     hasBrowserSTT,
   };
 };
