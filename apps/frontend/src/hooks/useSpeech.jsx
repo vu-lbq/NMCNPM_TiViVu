@@ -100,14 +100,14 @@ export const useTextToSpeech = () => {
   }, []);
 
   const detectLanguage = (text) => {
-    if (!text) return "en";
+    let textNoSpaces = text.replace(/\s/g, "");
+    if (!textNoSpaces) return "en";
     // Count Vietnamese diacritic characters
-    const viChars = text.match(
+    const viChars = textNoSpaces.match(
       /[ăâđêôơưĂÂĐÊÔƠƯàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ]/g
     );
     const viCount = viChars ? viChars.length : 0;
-    // Basic heuristic: if diacritics > 3 or > 2% of length, assume Vietnamese
-    if (viCount >= 3 || (viCount > 0 && viCount / text.length > 0.02))
+    if (viCount > 0 && viCount / textNoSpaces.length > 0.5)
       return "vi";
     return "en";
   };
