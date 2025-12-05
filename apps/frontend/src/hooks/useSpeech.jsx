@@ -107,7 +107,7 @@ export const useTextToSpeech = () => {
       /[ăâđêôơưĂÂĐÊÔƠƯàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ]/g
     );
     const viCount = viChars ? viChars.length : 0;
-    if (viCount > 0 && viCount / textNoSpaces.length > 0.5)
+    if (viCount > 0 && viCount / textNoSpaces.length > 0.15)
       return "vi";
     return "en";
   };

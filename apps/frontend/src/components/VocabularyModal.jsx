@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, Trash2, ExternalLink, Volume2 } from 'lucide-react';
-import { vocabService, voiceService } from '../services/api';
+import { vocabService } from '../services/api';
+// 1. Import hook useTextToSpeech
+import { useTextToSpeech } from '../hooks/useSpeech';
 
 function groupByDate(items) {
   const map = new Map();
@@ -27,7 +29,10 @@ function googleLink(word, lang = 'en') {
 export default function VocabularyModal({ isOpen, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [playingId, setPlayingId] = useState(null);
+  // 2. Sử dụng hook speak
+  const { speak } = useTextToSpeech();
+
+  // Bỏ playingId vì Web Speech API đọc rất nhanh, không cần trạng thái loading/playing phức tạp cho từ đơn
 
   useEffect(() => {
     if (!isOpen) return;
@@ -51,8 +56,8 @@ export default function VocabularyModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold">Saved Vocabulary</h3>
+        <div className="flex items-center justify-between p-4 border-b bg-[#00BDB6]">
+          <h3 className="text-lg font-semibold text-white">Saved Vocabulary</h3>
           <button onClick={onClose} className="p-2 text-gray-500 hover:text-black"><X size={18} /></button>
         </div>
         <div className="p-4 overflow-auto">
@@ -69,7 +74,7 @@ export default function VocabularyModal({ isOpen, onClose }) {
                     <div key={it.id} className="flex items-start justify-between gap-3 p-3 rounded-lg border">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <a href={cambridgeLink(it.word)} target="_blank" rel="noreferrer" className="underline text-blue-700 hover:text-blue-900">
+                          <a href={cambridgeLink(it.word)} target="_blank" rel="noreferrer" className="text-[#1D2957] hover:text-blue-900 font-bold">
                             {it.word}
                           </a>
                           <a href={googleLink(it.word, it.lang)} target="_blank" rel="noreferrer" title="Open in Google Translate" className="text-gray-500 hover:text-black">
@@ -78,25 +83,11 @@ export default function VocabularyModal({ isOpen, onClose }) {
                           {it.phonetics && (
                             <span className="text-sm text-gray-600">/{it.phonetics}/</span>
                           )}
+                          
+                          {/* 3. Thay thế nút Audio cũ bằng nút gọi hàm speak */}
                           <button
-                            onClick={async () => {
-                              try {
-                                setPlayingId(it.id);
-                                const resp = await voiceService.tts({ text: it.word, language: it.lang || 'en', voice: 'alloy', format: 'mp3' });
-                                const b64 = resp?.audioBase64;
-                                const ct = resp?.contentType || 'audio/mpeg';
-                                if (b64) {
-                                  const audio = new Audio(`data:${ct};base64,${b64}`);
-                                  audio.onended = () => setPlayingId(null);
-                                  audio.play().catch(() => setPlayingId(null));
-                                } else {
-                                  setPlayingId(null);
-                                }
-                              } catch {
-                                setPlayingId(null);
-                              }
-                            }}
-                            className={`p-1 rounded ${playingId === it.id ? 'text-blue-600' : 'text-gray-600 hover:text-black'}`}
+                            onClick={() => speak(it.word)}
+                            className="p-1 rounded text-gray-600 hover:text-[#00BDB6] active:scale-95 transition-transform"
                             title="Play pronunciation"
                           >
                             <Volume2 size={16} />
@@ -116,7 +107,7 @@ export default function VocabularyModal({ isOpen, onClose }) {
                             setItems((prev) => prev.filter((x) => x.id !== it.id));
                           } catch {}
                         }}
-                        className="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-md"
+                        className="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-colors"
                         title="Remove"
                       >
                         <Trash2 size={16} />

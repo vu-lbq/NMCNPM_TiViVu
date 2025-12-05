@@ -42,7 +42,7 @@ const MainLayout = ({ children, onSelectConversation, selectedConversationId, si
             </div>
             <button
               onClick={logout}
-              className="flex items-center gap-2 text-red-300 hover:text-red-200 px-2 text-sm w-full transition-colors"
+              className="flex items-center gap-2 text-red-300 hover:text-red-200 p-2 text-sm w-full transition-colors"
             >
               <LogOut size={16} /> Log out
             </button>
@@ -68,10 +68,7 @@ const MainLayout = ({ children, onSelectConversation, selectedConversationId, si
             </button>
 
             <div className="flex items-baseline gap-3">
-              <h1 className="text-xl font-bold text-[#1D2957] tracking-tight">
-                Ti<span className="text-[#00BDB6]">Vi</span>Vu
-              </h1>
-              <span className="hidden sm:inline text-sm text-gray-500">| English Learning Platform</span>
+              <img src="images/logo-light.svg" alt="" />
             </div>
           </div>
 
