@@ -36,7 +36,10 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Footer intentionally left without direct app link; access after login */}
+      <footer className="p-4 text-center text-xs text-gray-500 leading-snug">
+        <div>@2025 Tín, Việt and Vũ</div>
+        <div>24880061, 24880074 and 24880077</div>
+      </footer>
     </div>
   );
 }
