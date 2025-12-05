@@ -38,6 +38,7 @@ const ChatPage = () => {
   const mediaRecorderRef = useRef(null);
   const recordChunksRef = useRef([]);
   const textAreaRef = useRef(null);
+  const [sttLanguage, setSttLanguage] = useState('en');
 
   useEffect(() => {
     if (transcript) setInput((prev) => (prev ? prev + " " : "") + transcript);
@@ -150,10 +151,11 @@ const ChatPage = () => {
             }
           } else {
             // Voice -> Text: transcribe and append to input
-            const res = await voiceService.stt({ audioBase64: base64, filename, language: 'en' });
+            const res = await voiceService.stt({ audioBase64: base64, filename, language: sttLanguage });
             const text = (res?.text || '').trim();
             if (text) {
-              setInput((prev) => (prev ? prev + ' ' : '') + text);
+              // Replace input with STT result to avoid duplication
+              setInput(text);
               setTranscript(text);
             }
           }
@@ -302,6 +304,16 @@ const ChatPage = () => {
               >
                 {isRecording ? <StopCircle size={24} /> : <Mic size={24} />}
               </button>
+              <select
+                value={sttLanguage}
+                onChange={(e) => setSttLanguage(e.target.value)}
+                disabled={isProcessing || isRecording}
+                className="px-3 py-2 rounded-xl border text-sm bg-white text-[#1D2957] border-gray-200 hover:bg-gray-100"
+                title="STT language"
+              >
+                <option value="en">English</option>
+                <option value="vi">Vietnamese</option>
+              </select>
               <button
                 onClick={() => setVoiceReplyMode((v) => !v)}
                 disabled={isProcessing || isRecording}
