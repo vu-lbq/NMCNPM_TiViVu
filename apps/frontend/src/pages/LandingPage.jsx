@@ -17,7 +17,7 @@ export default function LandingPage() {
           </Link>
           
           <Link 
-            to="/login" 
+            to="/login?mode=signup" 
             className="px-5 py-2.5 bg-[#00BDB6] text-white text-sm font-semibold rounded-lg hover:bg-[#00a8a2] transition-all shadow-sm hover:shadow-md"
           >
             Sign up

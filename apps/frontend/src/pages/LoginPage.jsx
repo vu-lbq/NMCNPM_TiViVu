@@ -5,7 +5,14 @@ import { useAuth } from "../context/useAuth";
 const LoginPage = () => {
   const { login, register, loading } = useAuth();
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('mode') !== 'signup';
+    } catch {
+      return true;
+    }
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
