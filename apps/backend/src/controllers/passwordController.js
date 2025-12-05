@@ -13,7 +13,8 @@ passwordController.forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
     }
-    const user = await User.findOne({ where: { email } });
+    // DB uses username (stores the user's email); there's no email column
+    const user = await User.findOne({ where: { username: email } });
     if (!user) {
       // Avoid user enumeration: respond with success regardless
       return res.status(200).json({ ok: true });
@@ -23,14 +24,14 @@ passwordController.forgotPassword = async (req, res) => {
     const resetLink = `${req.protocol}://${host}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
     await sendForgotPasswordMail({
       toEmail: email,
-      toName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+      toName: user.displayName || email,
       host,
       resetLink
     });
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('forgotPassword error:', err.message);
-    return res.status(500).json({ error: 'Failed to send reset email' });
+    console.error('forgotPassword error:', err);
+    return res.status(500).json({ error: 'Failed to send reset email', detail: String(err.message || err) });
   }
 };
 
@@ -53,16 +54,18 @@ passwordController.resetPassword = async (req, res) => {
     if (!payload || payload.email !== email) {
       return res.status(400).json({ error: 'Invalid or expired token' });
     }
-    const user = await User.findOne({ where: { email } });
+    // Lookup by username since there's no email column
+    const user = await User.findOne({ where: { username: email } });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     const hashed = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
-    await User.update({ password: hashed }, { where: { id: user.id } });
+    // Update correct column: passwordHash
+    await User.update({ passwordHash: hashed }, { where: { id: user.id } });
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('resetPassword error:', err.message);
-    return res.status(500).json({ error: 'Failed to reset password' });
+    console.error('resetPassword error:', err);
+    return res.status(500).json({ error: 'Failed to reset password', detail: String(err.message || err) });
   }
 };
 
