@@ -34,7 +34,7 @@ export default function LandingPage() {
           </div>
         </div>
         <Hero />
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto">
           <Carousel imagePaths={[
             '/landing/slide1.jpg',
             '/landing/slide2.jpg',
