@@ -25,10 +25,8 @@ export default function AdminFeedback() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-xl font-bold text-[#1D2957] tracking-tight mb-4">
-        <a href="/" title="Back to TiviVu Chat">
-          Ti
-          <span className="text-[#00BDB6]">Vi</span>
-          Vu
+        <a href="/chat" title="Back to TiviVu Chat">
+          <img src="images/logo-light.svg" alt="" />
         </a>
       </h1>
       <h2 className="text-2xl font-semibold text-[#1D2957] mb-4">Feedback</h2>
