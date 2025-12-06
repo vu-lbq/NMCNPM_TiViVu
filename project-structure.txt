@@ -11,7 +11,7 @@ NMCNPM_TiViVu/
 ├─ apps/
 │  ├─ frontend/            (React + Vite + TailwindCSS)
 │  │  ├─ src/
-│  │  ├─ public/
+│  │  ├─ public/           (favicon, landingpage images) 
 │  │  └─ .env.example      (VITE_API_BASE_URL)
 │  └─ backend/             (Express.js, 3-layer inside backend)
 │     ├─ src/

@@ -5,151 +5,113 @@ Root
 - README.md
 - requirement.txt
 - project-structure.txt
-- apps/                                             Folder chính của Project
+- apps/                                 Thư mục chính của dự án
 	- backend/
-		- package.json                              Backend dependencies, scripts (build/start), metadata
-		- pnpm-lock.yaml
-		- README.md
-		- server.js                                 Entry point to start Express server and connect DB
-		- db/
-			- migrations/
-				- Sequelize migration scripts to evolve DB schema
-			- seed/
-				- Seed scripts to populate initial data (e.g., admin user)
+		- package.json                  : Phụ thuộc backend, script (build/start), thông tin dự án
+		- pnpm-lock.yaml                : Tệp khóa đảm bảo phiên bản gói chính xác
+		- README.md                     : Tài liệu mô tả dịch vụ backend
+		// Backend Detailed
+		- .env                          : Biến môi trường (DB URL, JWT, Mailjet)
+		- .sequelizerc                  : Cấu hình đường dẫn cho Sequelize CLI (models/migrations/seeders)
+		- createdb.js                   : Script tạo/khởi tạo cơ sở dữ liệu
+		- server.js                     : Khởi động máy chủ Express
 		- src/
-			- app.js
-			- Express app configuration: middleware, CORS, routes wiring
+			- app.js                      : Thiết lập ứng dụng Express (middleware, CORS, router)
+			- dbInit.js                   : Logic khởi tạo/đồng bộ cơ sở dữ liệu
 			- config/
-				Root
-				- LICENSE                           : Project license file
-				- README.md                         : Project overview and setup instructions
-				- requirement.txt                   : Dependencies list (if any)
-				- project-structure.txt             : Initial project structure notes
-				- apps/                             : Folder chính của Project
-					- backend/
-						- package.json                  : Backend dependencies, scripts (build/start), metadata
-						- pnpm-lock.yaml                : Lock file for exact package versions
-						- README.md                     : Backend service documentation
-						- server.js                     : Entry point to start Express server and connect DB
-						- db/
-							- migrations/                 : Sequelize migration scripts to evolve DB schema
-							- seed/                       : Seed scripts to populate initial data (e.g., admin user)
-						- src/
-							- app.js                      : Express app configuration (middleware, CORS, routes)
-							- config/                     : Configuration files (DB, env, service keys)
-							- controllers/                : Business logic handlers for specific routes
-								- controller.js             : Example controller
-							- middlewares/                : Auth guard, validation, logging
-							- models/                     : Sequelize models and associations
-							- routes/
-								- mainRouter.js             : Registers API endpoints (auth, chat, admin, voice, vocab)
-							- services/                   : External/internal service wrappers (Mailjet, TTS/STT, dictionary)
-							- utils/                      : Utility helpers (tokens, formatting, error handling)
-						- tests/                        : Backend unit/integration tests
-    
-						Backend Detailed
-						- .env                          : Environment variables (DB URL, JWT, Mailjet)
-						- .sequelizerc                  : Sequelize CLI paths (models/migrations/seeders)
-						- createdb.js                   : Script to create/init database
-						- server.js                     : Express server bootstrap
-						- src/
-							- app.js                      : Express app setup (middlewares, CORS, routers)
-							- dbInit.js                   : Database init/sync logic
-							- config/
-								- config.json               : Sequelize env configs
-								- db.js                     : Sequelize instance connection
-							- controllers/
-								- adminController.js        : Admin operations (users/roles/dashboard)
-								- aiController.js           : AI chat/integration endpoints
-								- authController.js         : Register/login/me; token issuance
-								- controller.js             : Shared/example controller base
-								- conversationController.js : Conversation CRUD/list
-								- feedbackController.js     : Feedback submit/list/manage
-								- messageController.js      : Message CRUD/list per conversation
-								- nlpController.js          : NLP utilities (translate/summarize)
-								- passwordController.js     : Forgot/reset password (Mailjet)
-								- vocabController.js        : Vocabulary CRUD; phonetics auto-fetch
-								- voiceController.js        : TTS/STT/voice-chat endpoints
-							- middlewares/
-								- auth.js                   : JWT auth guard (ensure user/admin)
-								- errorHandler.js           : Error formatting middleware
-							- migrations/
-								- 20251203000100-create-feedbacks.js           : Create feedbacks table
-								- 20251203001000-add-role-to-users.js          : Add role column to users
-								- 20251203002000-add-phonetics-to-vocabularies.js : Add phonetics to vocabularies
-							- models/
-								- Conversation.js           : Conversation model
-								- Feedback.js               : Feedback model
-								- index.js                  : Models bootstrap/associations
-								- Message.js                : Message model
-								- User.js                   : User model (email/password/role)
-								- Vocabulary.js             : Vocabulary model (word/phonetics)
-							- routes/
-								- conversationRouter.js     : Conversation/message endpoints
-								- mainRouter.js             : Root API router wiring
-							- seeders/
-								- initall.js                : Seed initial data (admin/users)
-							- services/
-								- aiService.js              : LLM wrapper (prompting/responses)
-								- mailService.js            : Mailjet email sending
-								- sttService.js             : Speech-to-text integration
-								- ttsService.js             : Text-to-speech integration
-							- utils/
-								- apiError.js               : Standard API error class
-								- apiResponse.js            : Success response helper
-								- resetToken.js             : Reset token generation/validation
-						- tests/
-							- .gitkeep                    : Placeholder for tests folder
-					- frontend/
-						- index.html                    : Vite HTML shell; mounts React at `#root`
-						- package.json                  : Frontend dependencies and Vite scripts
-						- pnpm-lock.yaml                : Lock file for frontend packages
-						- README.md                     : Frontend app documentation
-						- public/
-							- images/
-								- favicon.svg               : Site icon served from `/images/favicon.svg`
-						- src/
-							- App.jsx                     : App composition: Router, routes, auth provider wiring
-							- main.jsx                    : React/Vite bootstrap: creates root and renders `<App/>`
-							- layouts/
-								- MainLayout.jsx            : Shared app layout (header/sidebar/content)
-							- pages/
-								- LandingPage.jsx           : Marketing/entry page; links to sign-in/sign-up
-								- LoginPage.jsx             : Sign in/sign up form; Remember Me option; navigation
-								- ForgotPasswordPage.jsx    : Request password reset via email flow
-								- ResetPasswordPage.jsx     : Reset password using token flow
-								- ChatPage.jsx              : Main chat UI; STT/TTS controls; conversation list
-								- admin/
-									- AdminDashboard.jsx      : Admin overview; quick links/stats
-									- AdminUsers.jsx          : Manage users (list, roles); admin-only actions
-									- AdminFeedback.jsx       : Review user feedback submissions
-							- components/
-								- MessageBubble.jsx         : Renders chat messages with styling and actions
-								- VoiceChatModal.jsx        : Voice-to-voice modal; record and play AI replies
-								- DictionaryModal.jsx       : Word lookup helper; definitions/usage
-								- VocabularyModal.jsx       : Saved vocabulary; phonetics + speaker
-								- FeedbackModal.jsx         : Collects user feedback; posts to backend
-								- Hero.jsx                  : Landing hero section with CTA and branding
-								- Carousel.jsx              : Auto-advancing image carousel for landing
-								- FeatureTrio.jsx           : Three feature cards highlighting capabilities
-							- hooks/
-								- useSpeech.jsx             : Browser speech recognition and synthesis helpers
-							- context/
-								- AuthProvider.jsx          : Auth state, Remember Me, bootstrapping, login/register/logout
-								- authContext.js            : React context object for auth state
-								- useAuth.js                : Hook to access auth context in components
-							- services/
-								- api.jsx                   : API client: auth/chat/voice/admin/vocab; attaches JWT
-							- utils/
-								- sttSanitize.js            : Sanitizes STT output (collapse immediate repeats)
+				- config.json               : Cấu hình môi trường cho Sequelize
+				- db.js                     : Kết nối instance Sequelize
+			- controllers/
+				- adminController.js        : Tác vụ quản trị (người dùng/vai trò/bảng điều khiển)
+				- aiController.js           : Endpoint chat AI/tích hợp
+				- authController.js         : Đăng ký/đăng nhập/thông tin người dùng; cấp token
+				- controller.js             : Controller mẫu/dùng chung
+				- conversationController.js : CRUD hội thoại/danh sách
+				- feedbackController.js     : Gửi/xem/quản lý phản hồi
+				- messageController.js      : CRUD tin nhắn/danh sách theo hội thoại
+				- nlpController.js          : Tiện ích NLP (dịch/tóm tắt)
+				- passwordController.js     : Quên/đặt lại mật khẩu (Mailjet)
+				- vocabController.js        : CRUD từ vựng; tự động lấy phiên âm
+				- voiceController.js        : Endpoint chuyển văn bản thành giọng nói/STT/voice-chat
+			- middlewares/
+				- auth.js                   : Bảo vệ xác thực bằng JWT (đảm bảo người dùng/admin)
+				- errorHandler.js           : Middleware định dạng lỗi
+			- migrations/
+				- 20251203000100-create-feedbacks.js           : Tạo bảng feedbacks
+				- 20251203001000-add-role-to-users.js          : Thêm cột vai trò vào bảng users
+				- 20251203002000-add-phonetics-to-vocabularies.js : Thêm phiên âm cho vocabularies
+			- models/
+				- Conversation.js           : Model hội thoại
+				- Feedback.js               : Model phản hồi
+				- index.js                  : Khởi tạo các model/liên kết
+				- Message.js                : Model tin nhắn
+				- User.js                   : Model người dùng (username/passwordHash/role)
+				- Vocabulary.js             : Model từ vựng (word/phonetics)
+			- routes/
+				- conversationRouter.js     : Endpoint hội thoại/tin nhắn
+				- mainRouter.js             : Gắn kết router gốc cho API
+			- seeders/
+				- initall.js                : Seed dữ liệu ban đầu (admin/người dùng)
+			- services/
+				- aiService.js              : Lớp bọc LLM (prompt/response)
+				- mailService.js            : Gửi email qua Mailjet
+				- sttService.js             : Tích hợp chuyển giọng nói thành văn bản (STT)
+				- ttsService.js             : Tích hợp chuyển văn bản thành giọng nói (TTS)
+			- utils/
+				- apiError.js               : Lớp lỗi API tiêu chuẩn
+				- apiResponse.js            : Trợ giúp trả về thành công
+				- resetToken.js             : Tạo/xác thực token đặt lại mật khẩu
+---------------------------------------------------------------------------------------------------------
+	- frontend/
+		- index.html                    : Khung HTML Vite; gắn React tại `#root`
+		- package.json                  : Phụ thuộc frontend và script Vite
+		- pnpm-lock.yaml                : Tệp khóa cho các gói frontend
+		- README.md                     : Tài liệu ứng dụng frontend
+		- public/
+			- images/
+				- favicon.svg               : Biểu tượng trang phục vụ từ `/images/favicon.svg`
+		- src/
+			- App.jsx                     : Thành phần ứng dụng: Router, các route, kết nối auth provider
+			- main.jsx                    : Khởi động React/Vite: tạo root và render `<App/>`
+			- layouts/
+				- MainLayout.jsx            : Layout dùng chung (header/sidebar/nội dung)
+			- pages/
+				- LandingPage.jsx           : Trang giới thiệu/điểm vào; liên kết đăng nhập/đăng ký
+				- LoginPage.jsx             : Form đăng nhập/đăng ký; tuỳ chọn Ghi nhớ đăng nhập; điều hướng
+				- ForgotPasswordPage.jsx    : Yêu cầu đặt lại mật khẩu qua email
+				- ResetPasswordPage.jsx     : Đặt lại mật khẩu bằng token
+				- ChatPage.jsx              : Giao diện chat chính; điều khiển STT/TTS; danh sách hội thoại
+				- admin/
+					- AdminDashboard.jsx      : Tổng quan admin; liên kết nhanh/thống kê
+					- AdminUsers.jsx          : Quản lý người dùng (danh sách, vai trò); thao tác dành cho admin
+					- AdminFeedback.jsx       : Xem xét phản hồi người dùng
+			- components/
+				- MessageBubble.jsx         : Hiển thị tin nhắn chat với kiểu dáng và hành động
+				- VoiceChatModal.jsx        : Modal thoại-đến-thoại; ghi âm và phát hồi đáp AI
+				- DictionaryModal.jsx       : Tra cứu từ; định nghĩa/cách dùng
+				- VocabularyModal.jsx       : Từ vựng đã lưu; phiên âm + nút phát âm
+				- FeedbackModal.jsx         : Thu thập phản hồi người dùng; gửi lên backend
+				- Hero.jsx                  : Landing hero section with CTA and branding
+				- Carousel.jsx              : Auto-advancing image carousel for landing
+				- FeatureTrio.jsx           : Three feature cards highlighting capabilities
+			- hooks/
+				- useSpeech.jsx             : Hỗ trợ nhận dạng giọng nói và tổng hợp giọng nói trên trình duyệt
+			- context/
+				- AuthProvider.jsx          : Trạng thái auth, Ghi nhớ đăng nhập, bootstrapping, đăng nhập/đăng ký/đăng xuất
+				- authContext.js            : Đối tượng React context cho trạng thái auth
+				- useAuth.js                : Hook truy cập context auth trong component
+			- services/
+				- api.jsx                   : Client API: auth/chat/voice/admin/vocab; đính kèm JWT
+			- utils/
+				- sttSanitize.js            : Làm sạch kết quả STT (gộp các lặp lại tức thời)
 				- docs/
-					- architecture_mermaid.mmd        : System architecture diagram (Mermaid)
-					- architecture.puml               : System architecture diagram (PlantUML)
-					- class-diagram-mermaid.mmd       : Class diagram (Mermaid)
-					- class-diagram.puml              : Class diagram (PlantUML)
-					- usecase-en.md                   : English use cases description
-					- usecase-mermaid.mmd             : Use case diagram (Mermaid)
-					- usecase-vi.md                   : Vietnamese use cases description
-					- folder_structure.txt            : Project folder structure and file annotations
-				- scripts/                          : Helper scripts for development/automation
-					- React context object for auth state
+						- architecture_mermaid.mmd        : Sơ đồ kiến trúc hệ thống (Mermaid)
+						- architecture.puml               : Sơ đồ kiến trúc hệ thống (PlantUML)
+						- class-diagram-mermaid.mmd       : Sơ đồ lớp (Mermaid)
+						- class-diagram.puml              : Sơ đồ lớp (PlantUML)
+						- usecase-en.md                   : Mô tả tình huống sử dụng bằng tiếng Anh
+						- usecase-mermaid.mmd             : Sơ đồ trường hợp sử dụng (Mermaid)
+						- usecase-vi.md                   : Mô tả tình huống sử dụng bằng tiếng Việt
+						- folder_structure.txt            : Cấu trúc thư mục dự án và chú thích tệp
+				- scripts/                          : Script hỗ trợ phát triển/tự động hóa
+					- Đối tượng React context cho trạng thái xác thực
