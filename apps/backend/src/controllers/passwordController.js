@@ -13,11 +13,21 @@ passwordController.forgotPassword = async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
     }
+    // Validate email format early to give rõ ràng lỗi cho người dùng
+    const emailPattern = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i;
+    if (!emailPattern.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
     // DB uses username (stores the user's email); there's no email column
     const user = await User.findOne({ where: { username: email } });
     if (!user) {
-      // Avoid user enumeration: respond with success regardless
-      return res.status(200).json({ ok: true });
+      // Non-enumeration (mặc định): trả về thành công để tránh lộ thông tin tồn tại người dùng
+      const nonEnum = process.env.SECURE_FORGOT_NON_ENUMERATION !== 'false';
+      if (nonEnum) {
+        return res.status(200).json({ ok: true });
+      }
+      // Nếu muốn báo rõ email không tồn tại (không khuyến nghị), bật SECURE_FORGOT_NON_ENUMERATION=false
+      return res.status(404).json({ error: 'Email not found' });
     }
     const token = signResetToken(email);
     const host = req.get('host');
@@ -31,6 +41,7 @@ passwordController.forgotPassword = async (req, res) => {
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('forgotPassword error:', err);
+    // Trả về thông tin lỗi chi tiết từ Mailjet/middleware nếu có
     return res.status(500).json({ error: 'Failed to send reset email', detail: String(err.message || err) });
   }
 };
@@ -50,6 +61,10 @@ passwordController.resetPassword = async (req, res) => {
     if (!token || !email || !password) {
       return res.status(400).json({ error: 'Token, email, and password are required' });
     }
+    const emailPattern = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i;
+    if (!emailPattern.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
     const payload = verifyResetToken(token);
     if (!payload || payload.email !== email) {
       return res.status(400).json({ error: 'Invalid or expired token' });
@@ -57,7 +72,7 @@ passwordController.resetPassword = async (req, res) => {
     // Lookup by username since there's no email column
     const user = await User.findOne({ where: { username: email } });
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Email not found' });
     }
     const hashed = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
     // Update correct column: passwordHash

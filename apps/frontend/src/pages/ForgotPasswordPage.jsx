@@ -16,7 +16,8 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(email);
       setStatus('sent');
     } catch (err) {
-      setError(err.message || 'Failed to send email');
+      const backendMsg = err?.response?.data?.error || err?.response?.data?.detail;
+      setError(backendMsg || err.message || 'Failed to send reset email');
       setStatus('error');
     }
   };
@@ -62,6 +63,8 @@ export default function ForgotPasswordPage() {
                 <input 
                   type="email" 
                   required 
+                  pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
+                  title="Please enter a valid email address"
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#00BDB6] focus:ring-2 focus:ring-[#00BDB6]/20 outline-none transition-all text-[#1D2957] placeholder-gray-400" 
