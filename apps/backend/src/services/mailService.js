@@ -25,6 +25,11 @@ async function sendForgotPasswordMail({ toEmail, toName, host, resetLink }) {
       `Invalid sender email configured: ${fromEmail}. Set MJ_FROM_EMAIL to a valid domain email (e.g., noreply@yourdomain.com).`
     );
   }
+  // Kiểm tra email người nhận để trả lỗi sớm, tránh gọi Mailjet không cần thiết
+  const recipientEmailPattern = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/i;
+  if (!recipientEmailPattern.test(toEmail)) {
+    throw new Error(`Invalid recipient email: ${toEmail}`);
+  }
 
   try {
     const request = await mailjet

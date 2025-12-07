@@ -15,7 +15,12 @@ function getToken() {
 async function handleResponse(res) {
   if (!res.ok) {
     let msg = await res.text();
-    try { const j = JSON.parse(msg); msg = j.error || j.message || msg; } catch { /* noop */ }
+    try {
+      const j = JSON.parse(msg);
+      const base = j.error || j.message || msg;
+      const extra = j.detail ? `: ${j.detail}` : '';
+      msg = `${base}${extra}`.trim();
+    } catch { /* noop */ }
     throw new Error(msg || `HTTP ${res.status}`);
   }
   const ct = res.headers.get('content-type') || '';

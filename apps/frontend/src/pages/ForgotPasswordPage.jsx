@@ -16,8 +16,8 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(email);
       setStatus('sent');
     } catch (err) {
-      const backendMsg = err?.response?.data?.error || err?.response?.data?.detail;
-      setError(backendMsg || err.message || 'Failed to send reset email');
+      // Fetch-based errors carry details in err.message from handleResponse
+      setError(err?.message || 'Failed to send reset email');
       setStatus('error');
     }
   };
