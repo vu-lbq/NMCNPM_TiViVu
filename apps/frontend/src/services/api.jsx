@@ -197,6 +197,17 @@ export const vocabService = {
   }
 };
 
+export const dictionaryService = {
+  lookup: async (word, lang = 'en') => {
+    const token = getToken();
+    const params = new URLSearchParams({ word, lang });
+    const res = await fetch(`${API_BASE}/vocab/define?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return handleResponse(res); // { entries: [...] }
+  }
+};
+
 export const adminService = {
   getStats: async () => {
     const token = getToken();

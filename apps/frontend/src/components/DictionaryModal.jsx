@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { X, BookOpen, Globe, BookmarkPlus } from "lucide-react";
-import { vocabService } from "../services/api";
+import { X, BookOpen, Globe, BookmarkPlus, Volume2 } from "lucide-react";
+import { vocabService, dictionaryService } from "../services/api";
+import { useTextToSpeech } from "../hooks/useSpeech";
 // đây là component hiển thị modal từ điển khi người dùng chọn một từ
 // nó cung cấp các liên kết đến các nguồn từ điển và dịch thuật phổ biến
 // hàm để phát hiện ngôn ngữ của từ đã chọn
@@ -27,10 +28,33 @@ function buildLinks(text) {
 
 const DictionaryModal = ({ word, onClose }) => {
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [entries, setEntries] = useState([]);
+  const { speak } = useTextToSpeech();
   // Reset saving state whenever selected word changes
   useEffect(() => {
     setSaving(false);
   }, [word]);
+  useEffect(() => {
+    if (!word) return;
+    const lang = detectLang(word);
+    if (lang !== 'en') {
+      setEntries([]);
+      return;
+    }
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await dictionaryService.lookup(String(word).trim(), 'en');
+        setEntries(res?.entries || []);
+      } catch {
+        setEntries([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [word]);
+
   if (!word) return null;
   const links = buildLinks(word);
   const tokens = String(word || "").trim().split(/\s+/).filter(Boolean);
@@ -51,9 +75,40 @@ const DictionaryModal = ({ word, onClose }) => {
         <h3 className="text-2xl font-bold text-blue-600 mb-2 capitalize">
           {word}
         </h3>
-        <p className="text-gray-600 mb-6 text-sm">
-          Select a dictionary source:
-        </p>
+        {loading ? (
+          <p className="text-gray-600 mb-6 text-sm">Loading definitions...</p>
+        ) : entries.length > 0 ? (
+          <div className="mb-4 space-y-2">
+            {entries.slice(0,1).map((e, idx) => (
+              <div key={idx}>
+                {e.phonetic && (
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <span>/{e.phonetic}/</span>
+                    <button
+                      onClick={() => speak(e.word || word)}
+                      className="p-1 rounded text-gray-600 hover:text-[#00BDB6] active:scale-95 transition-transform"
+                      title="Play pronunciation"
+                    >
+                      <Volume2 size={16} />
+                    </button>
+                  </div>
+                )}
+                {e.meanings && e.meanings.length > 0 && (
+                  <ul className="list-disc list-inside text-sm text-gray-700 mt-2">
+                    {e.meanings.slice(0,2).map((m, i) => (
+                      <li key={i}>
+                        <span className="uppercase text-gray-500 mr-1">{m.partOfSpeech}</span>
+                        <span>{(m.definitions || []).slice(0,2).map(d => d.definition).join('; ')}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-600 mb-6 text-sm">Select a dictionary source:</p>
+        )}
 
         <div className="space-y-3">
           {links.map((l, idx) => (
@@ -78,7 +133,11 @@ const DictionaryModal = ({ word, onClose }) => {
               if (!cleaned) return;
               setSaving(true);
               try {
-                await vocabService.add({ word: cleaned, lang: 'en', source: 'dictionary' });
+                // attempt to extract a short vi meaning from first entry's definitions via AI is already in backend when missing
+                // we pass phonetics when available
+                const first = entries[0] || {};
+                const phonetics = first.phonetic || (first.phonetics?.[0]?.text) || undefined;
+                await vocabService.add({ word: cleaned, lang: 'en', source: 'dictionary', phonetics });
                 // Close after success to indicate completion
                 onClose?.();
               } catch {

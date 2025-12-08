@@ -4,7 +4,7 @@ config:
   layout: elk
 ---
 flowchart LR
-  %% Approximation of UML Use Case Diagram (Mermaid lacks native use case support)
+  %% Use Case Diagram approximation (Mermaid lacks native use case support)
   %% Actors
   User((Learner))
   Admin((Admin))
@@ -13,12 +13,18 @@ flowchart LR
   LLM((LLM Service))
   Dict((Dictionary Service))
   Trans((Translation Service))
+  Mail((Mail Service))
 
-  %% System boundary as subgraph
+  %% System boundary
   subgraph System[English Learning App]
     Register([Register])
     Login([Login])
     Logout([Logout])
+    ForgotPassword([Forgot Password])
+    ResetPassword([Reset Password])
+
+    AuthSession([Authenticated Session])
+
     ManageProfile([Manage Profile])
     StartConversation([Start Conversation])
     CaptureVoice([Capture Voice])
@@ -29,6 +35,7 @@ flowchart LR
     SuggestNextQuestions([Suggest Next Questions])
     PlayResponse([Play Response])
     TTSSynthesis([TTS Synthesis])
+
     TapWord([Tap Word])
     GetDefinition([Get Definition/Pronunciation])
     TranslateText([Translate Text])
@@ -48,6 +55,8 @@ flowchart LR
   User --> Register
   User --> Login
   User --> Logout
+  User --> ForgotPassword
+  User --> ResetPassword
   User --> ManageProfile
   User --> StartConversation
   User --> CaptureVoice
@@ -73,8 +82,34 @@ flowchart LR
   LLM --> GetLLMResponse
   Dict --> GetDefinition
   Trans --> TranslateText
+  Mail --> ForgotPassword
+  Mail --> ResetPassword
 
-  %% Include relationships (solid arrow with label)
+  %% Include relationships
+  %% Auth gating: protected features require Authenticated Session, which includes Login
+  AuthSession -->|include| Login
+  ManageProfile -->|include| AuthSession
+  StartConversation -->|include| AuthSession
+  CaptureVoice -->|include| AuthSession
+  STTTranscription -->|include| AuthSession
+  EditTranscription -->|include| AuthSession
+  SendMessage -->|include| AuthSession
+  GetLLMResponse -->|include| AuthSession
+  SuggestNextQuestions -->|include| AuthSession
+  PlayResponse -->|include| AuthSession
+  TTSSynthesis -->|include| AuthSession
+  TapWord -->|include| AuthSession
+  GetDefinition -->|include| AuthSession
+  TranslateText -->|include| AuthSession
+  SaveWord -->|include| AuthSession
+  ReviewVocabulary -->|include| AuthSession
+  ViewHistory -->|include| AuthSession
+  Settings -->|include| AuthSession
+  Feedback -->|include| AuthSession
+  ManagePrompts -->|include| AuthSession
+  MonitorUsage -->|include| AuthSession
+  ManageUsers -->|include| AuthSession
+  ManageContent -->|include| AuthSession
   StartConversation -->|include| CaptureVoice
   CaptureVoice -->|include| STTTranscription
   SendMessage -->|include| GetLLMResponse
@@ -83,12 +118,14 @@ flowchart LR
   TapWord -->|include| GetDefinition
   ReviewVocabulary -->|include| SaveWord
 
-  %% Extend relationships (dashed arrow with label)
+  %% Extend relationships
   EditTranscription -.->|extend| STTTranscription
   TapWord -.->|extend| TranslateText
   SaveWord -.->|extend| TapWord
   Login -.->|extend| Register
   Logout -.->|extend| Login
+  ForgotPassword -.->|extend| Login
+  ResetPassword -.->|extend| ForgotPassword
 
   %% Notes
   %% Latency targets: STT 1-2s, LLM 2-4s, TTS 1-2s
