@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, StopCircle, Send, Loader2, XCircle, Headphones } from "lucide-react";
+import { Mic, StopCircle, Send, Loader2, XCircle, Headphones, MessageSquare } from "lucide-react";
 import MainLayout from "../layouts/MainLayout";
 import MessageBubble from "../components/MessageBubble";
 import VoiceChatModal from "../components/VoiceChatModal";
@@ -382,12 +382,23 @@ const ChatPage = () => {
             </div>
           </div>
         </div>
+        {/* Desktop: inline feedback button (kept compact) */}
         <button
           onClick={() => setFeedbackOpen(true)}
-          className="p-3 rounded-xl transition-all shadow-sm bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200 absolute right-4 top-1/2 -translate-y-1/2"
+          className="hidden md:flex p-2 rounded-xl transition-all shadow-sm bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200 absolute right-4 top-1/2 -translate-y-1/2"
           title="Send Feedback"
         >
-          Feedback
+          <MessageSquare size={18} className="mr-2" /> Feedback
+        </button>
+
+        {/* Mobile: floating circular icon button that avoids overlapping input controls */}
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="md:hidden fixed bottom-20 right-4 z-40 p-3 rounded-full bg-[#00BDB6] text-white shadow-lg hover:bg-[#00a8a2]"
+          title="Send Feedback"
+          aria-label="Send Feedback"
+        >
+          <MessageSquare size={20} />
         </button>
       </div>
 
