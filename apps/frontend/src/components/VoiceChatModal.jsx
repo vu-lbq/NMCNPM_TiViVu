@@ -10,6 +10,9 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
   const chunksRef = useRef([]);
   const audioRef = useRef(null);
   const audioUrlRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const analyserRef = useRef(null);
+  const silenceTimerRef = useRef(null);
 
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,6 +32,20 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
       try { if (audioUrlRef.current) { URL.revokeObjectURL(audioUrlRef.current); audioUrlRef.current = null; } } catch { /* ignore */ }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+
+      // Setup WebAudio analyser to detect silence for hands-free auto stop
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        audioCtxRef.current = audioCtx;
+        analyserRef.current = analyser;
+      } catch {
+        audioCtxRef.current = null;
+        analyserRef.current = null;
+      }
       const mr = new MediaRecorder(stream);
       chunksRef.current = [];
       mr.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
@@ -41,6 +58,37 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
       mr.start();
       setIsRecording(true);
       setStatus("Recording... tap to stop");
+
+      // Hands-free: auto-stop after 2s of silence
+      if (handsFree && analyserRef.current) {
+        const analyser = analyserRef.current;
+        const bufferLength = analyser.fftSize;
+        const dataArray = new Uint8Array(bufferLength);
+        let lastSoundTs = Date.now();
+        const SILENCE_THRESHOLD = 10; // amplitude avg threshold
+        const SILENCE_MS = 2000; // 2 seconds
+        silenceTimerRef.current = setInterval(() => {
+          try {
+            analyser.getByteTimeDomainData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+              sum += Math.abs(dataArray[i] - 128);
+            }
+            const avg = sum / bufferLength;
+            if (avg > SILENCE_THRESHOLD) {
+              lastSoundTs = Date.now();
+            }
+            if (Date.now() - lastSoundTs >= SILENCE_MS) {
+              try { mediaRecorderRef.current?.stop(); } catch { /* ignore */ }
+              clearInterval(silenceTimerRef.current);
+              silenceTimerRef.current = null;
+            }
+          } catch {
+            clearInterval(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+        }, 200);
+      }
     } catch (err) {
       console.error("mic error", err);
       setStatus("Microphone error");
@@ -51,6 +99,10 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
     try { mediaRecorderRef.current?.stop(); } catch { /* ignore */ }
     setIsRecording(false);
     setStatus("Processing...");
+    if (silenceTimerRef.current) { clearInterval(silenceTimerRef.current); silenceTimerRef.current = null; }
+    try { audioCtxRef.current?.close(); } catch { /* ignore */ }
+    audioCtxRef.current = null;
+    analyserRef.current = null;
   };
 
   const handleUpload = async () => {
@@ -87,6 +139,7 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
           }
         };
         try { await audio.play(); } catch { /* ignore */ }
+        // no analyser cleanup here; handled on stopRecording/mr.onstop
       }
       setStatus("Tap to record");
     } catch (err) {
