@@ -382,13 +382,13 @@ const ChatPage = () => {
             </div>
           </div>
         </div>
-        {/* Desktop: inline feedback button (kept compact) */}
+        {/* Tablet/Desktop: inline feedback button as icon-only */}
         <button
           onClick={() => setFeedbackOpen(true)}
           className="hidden md:flex p-2 rounded-xl transition-all shadow-sm bg-white text-[#1D2957] hover:bg-gray-100 border border-gray-200 absolute right-4 top-1/2 -translate-y-1/2"
           title="Send Feedback"
         >
-          <MessageSquare size={18} className="mr-2" /> Feedback
+          <MessageSquare size={18} />
         </button>
 
         {/* Mobile: floating circular icon button that avoids overlapping input controls */}
