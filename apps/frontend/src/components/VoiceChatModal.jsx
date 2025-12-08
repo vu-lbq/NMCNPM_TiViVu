@@ -20,6 +20,11 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
   const [status, setStatus] = useState("Tap to record");
   const [lastTranscript, setLastTranscript] = useState("");
   const [handsFree, setHandsFree] = useState(true);
+  const [readyToast, setReadyToast] = useState(false);
+  const showReadyToast = () => {
+    setReadyToast(true);
+    setTimeout(() => setReadyToast(false), 2000);
+  };
 
   if (!isOpen) return null;
 
@@ -57,7 +62,7 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
       mediaRecorderRef.current = mr;
       mr.start();
       setIsRecording(true);
-      setStatus("Recording... tap to stop");
+      setStatus("Recording... Tap to stop (or pause 2s)");
 
       // Hands-free: auto-stop after 2s of silence
       if (handsFree && analyserRef.current) {
@@ -135,13 +140,21 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
           if (handsFree) {
             setTimeout(() => {
               if (!isProcessing) startRecording();
-            }, 500);
+            }, 1000);
+          } else {
+            setTimeout(() => {
+              showReadyToast();
+            }, 1000);
           }
         };
         try { await audio.play(); } catch { /* ignore */ }
         // no analyser cleanup here; handled on stopRecording/mr.onstop
       }
       setStatus("Tap to record");
+      // If no audio returned (provider muted), ensure flags reset
+      if (!outB64) {
+        setIsPlaying(false);
+      }
     } catch (err) {
       console.error("voiceChat upload error", err);
       setStatus("Failed. Try again");
@@ -160,6 +173,8 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
     try { if (audioRef.current) audioRef.current.pause(); } catch { /* ignore */ }
     try { if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current); } catch { /* ignore */ }
     audioRef.current = null; audioUrlRef.current = null;
+    setIsPlaying(false);
+    setIsProcessing(false);
     onClose?.();
   };
 
@@ -216,6 +231,11 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
               <span className="font-medium">You said</span>
             </div>
             <div className="opacity-95">{lastTranscript}</div>
+          </div>
+        )}
+        {readyToast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-white text-sm px-3 py-2 rounded shadow-lg z-50">
+            Ready to record
           </div>
         )}
       </div>
