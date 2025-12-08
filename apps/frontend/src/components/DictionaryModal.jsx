@@ -30,6 +30,8 @@ const DictionaryModal = ({ word, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
+  const [viMeanings, setViMeanings] = useState([]);
+  const [enMeanings, setEnMeanings] = useState([]);
   const { speak } = useTextToSpeech();
   // Reset saving state whenever selected word changes
   useEffect(() => {
@@ -47,6 +49,8 @@ const DictionaryModal = ({ word, onClose }) => {
         setLoading(true);
         const res = await dictionaryService.lookup(String(word).trim(), 'en');
         setEntries(res?.entries || []);
+        setViMeanings(res?.viMeanings || []);
+        setEnMeanings(res?.enMeanings || []);
       } catch {
         setEntries([]);
       } finally {
@@ -93,15 +97,28 @@ const DictionaryModal = ({ word, onClose }) => {
                     </button>
                   </div>
                 )}
-                {e.meanings && e.meanings.length > 0 && (
-                  <ul className="list-disc list-inside text-sm text-gray-700 mt-2">
-                    {e.meanings.slice(0,2).map((m, i) => (
-                      <li key={i}>
-                        <span className="uppercase text-gray-500 mr-1">{m.partOfSpeech}</span>
-                        <span>{(m.definitions || []).slice(0,2).map(d => d.definition).join('; ')}</span>
-                      </li>
-                    ))}
-                  </ul>
+                {viMeanings.length > 0 && (
+                  <div className="mt-2">
+                    <div className="text-xs text-gray-500 mb-1">Nghĩa tiếng Việt (ngắn gọn):</div>
+                    <ul className="list-disc list-inside text-sm text-gray-700">
+                      {viMeanings.slice(0,2).map((v, i) => (
+                        <li key={i}>{v}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {enMeanings.length > 0 && (
+                  <div className="mt-2">
+                    <div className="text-xs text-gray-500 mb-1">English (short):</div>
+                    <ul className="list-disc list-inside text-sm text-gray-700">
+                      {enMeanings.slice(0,2).map((m, i) => (
+                        <li key={i}>
+                          <span className="uppercase text-gray-500 mr-1">{m.partOfSpeech}</span>
+                          <span>{m.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             ))}
@@ -137,7 +154,8 @@ const DictionaryModal = ({ word, onClose }) => {
                 // we pass phonetics when available
                 const first = entries[0] || {};
                 const phonetics = first.phonetic || (first.phonetics?.[0]?.text) || undefined;
-                await vocabService.add({ word: cleaned, lang: 'en', source: 'dictionary', phonetics });
+                const meaningVi = viMeanings && viMeanings.length ? viMeanings.slice(0,2).join(', ') : undefined;
+                await vocabService.add({ word: cleaned, lang: 'en', source: 'dictionary', phonetics, meaningVi });
                 // Close after success to indicate completion
                 onClose?.();
               } catch {
