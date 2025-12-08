@@ -62,7 +62,7 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
       mediaRecorderRef.current = mr;
       mr.start();
       setIsRecording(true);
-      setStatus("Recording... Tap to stop (or pause 2s)");
+      setStatus("Recording... Tap to stop (or pause 5s)");
 
       // Hands-free: auto-stop after 2s of silence
       if (handsFree && analyserRef.current) {
@@ -71,7 +71,7 @@ export default function VoiceChatModal({ isOpen, onClose, conversationId, onRepl
         const dataArray = new Uint8Array(bufferLength);
         let lastSoundTs = Date.now();
         const SILENCE_THRESHOLD = 10; // amplitude avg threshold
-        const SILENCE_MS = 2000; // 2 seconds
+        const SILENCE_MS = 5000; // 5 seconds
         silenceTimerRef.current = setInterval(() => {
           try {
             analyser.getByteTimeDomainData(dataArray);
