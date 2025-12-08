@@ -37,6 +37,9 @@ const ChatPage = () => {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const mediaRecorderRef = useRef(null);
   const recordChunksRef = useRef([]);
+  const audioCtxRef = useRef(null);
+  const analyserRef = useRef(null);
+  const silenceCheckTimerRef = useRef(null);
   const textAreaRef = useRef(null);
   const [sttLanguage, setSttLanguage] = useState('en');
 
@@ -126,6 +129,18 @@ const ChatPage = () => {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Setup WebAudio analyser to detect silence
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        audioCtxRef.current = audioCtx;
+        analyserRef.current = analyser;
+      } catch {
+        // WebAudio may be unavailable; skip hands-free
+      }
       const mr = new MediaRecorder(stream);
       recordChunksRef.current = [];
       mr.ondataavailable = (e) => {
@@ -166,6 +181,10 @@ const ChatPage = () => {
         } finally {
           // stop all tracks
           try { stream.getTracks().forEach(t => t.stop()); } catch { /* ignore */ }
+          if (silenceCheckTimerRef.current) { clearInterval(silenceCheckTimerRef.current); silenceCheckTimerRef.current = null; }
+          try { audioCtxRef.current?.close(); } catch { /* ignore */ }
+          audioCtxRef.current = null;
+          analyserRef.current = null;
           setIsRecording(false);
           mediaRecorderRef.current = null;
         }
@@ -173,6 +192,40 @@ const ChatPage = () => {
       mediaRecorderRef.current = mr;
       mr.start();
       setIsRecording(true);
+
+      // Hands-free: auto-stop on >=2s of silence, then proceed send/transcribe
+      if (analyserRef.current) {
+        const analyser = analyserRef.current;
+        const bufferLength = analyser.fftSize;
+        const dataArray = new Uint8Array(bufferLength);
+        let lastSoundTs = Date.now();
+        const SILENCE_THRESHOLD = 10; // 0-255 (very low amplitude)
+        const SILENCE_MS = 2000; // 2 seconds
+        silenceCheckTimerRef.current = setInterval(() => {
+          try {
+            analyser.getByteTimeDomainData(dataArray);
+            // Compute average deviation from mid (128)
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+              sum += Math.abs(dataArray[i] - 128);
+            }
+            const avg = sum / bufferLength;
+            if (avg > SILENCE_THRESHOLD) {
+              lastSoundTs = Date.now();
+            }
+            if (Date.now() - lastSoundTs >= SILENCE_MS) {
+              // Auto stop recording; MediaRecorder onstop will handle next
+              try { mediaRecorderRef.current?.stop(); } catch { /* ignore */ }
+              clearInterval(silenceCheckTimerRef.current);
+              silenceCheckTimerRef.current = null;
+            }
+          } catch {
+            // if analyser fails, disable timer
+            clearInterval(silenceCheckTimerRef.current);
+            silenceCheckTimerRef.current = null;
+          }
+        }, 200);
+      }
     } catch (err) {
       console.error('Mic access error:', err);
       setIsRecording(false);
