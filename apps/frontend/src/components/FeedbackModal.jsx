@@ -56,16 +56,15 @@ export default function FeedbackModal({ isOpen, onClose }) {
             <p className="text-xs text-gray-500 mt-1">At least 10 characters.</p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          {status === 'sent' ? (
+          {status === 'sent' && (
             <p className="text-green-600">Thanks! Your feedback was sent.</p>
-          ) : (
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={onClose} className="px-3 py-2 rounded border">Close</button>
-              <button type="submit" disabled={status==='sending'} className="px-3 py-2 rounded bg-[#00BDB6] text-white">
-                {status==='sending' ? 'Sending…' : 'Send'}
-              </button>
-            </div>
           )}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="px-3 py-2 rounded border">Close</button>
+            <button type="submit" disabled={status==='sending'} className="px-3 py-2 rounded bg-[#00BDB6] text-white">
+              {status==='sending' ? 'Sending…' : 'Send'}
+            </button>
+          </div>
         </form>
       </div>
     </div>
