@@ -79,7 +79,7 @@ async function generateAssistantReply(conversationId, userContent, options = {})
   // Tạo mảng messages: gồm system prompt, lịch sử và đầu vào người dùng
   const messages = [{ role: 'system', content: SYSTEM_PROMPT }, ...extraSystem, ...history, { role: "user", content: userContent }];
   // Xác định số token tối đa; mặc định theo biến môi trường nếu không chỉ định
-  // OPENAI_MAX_TOKENS=192 trong .env dùng để phản hồi nhanh hơn
+  // OPENAI_MAX_TOKENS=512 trong .env dùng để phản hồi nhanh hơn
   const maxTokens = (options && options.maxTokens != null)
     ? Number(options.maxTokens)
     : (Number(process.env.OPENAI_MAX_TOKENS || 0) || undefined);
