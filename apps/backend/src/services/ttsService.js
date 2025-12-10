@@ -19,7 +19,6 @@ function pickVoice(lang, requested) {
 
 // Sử dụng OpenAI TTS qua Audio API (GPT-4o-mini-tts) khi khả dụng
 // Dự phòng: trả về buffer văn bản nếu TTS API không khả dụng
-// Tài liệu TTS: https://platform.openai.com/docs/api-reference/audio/speech/create-speech
 async function synthesize({ text, voice = 'alloy', format = 'mp3', openaiClient, language }) {
   if (!openaiClient) throw new Error('OpenAI client not configured');
   try {

@@ -10,6 +10,7 @@ try {
   OpenAI = require('openai');
 } catch {}
 
+// Safely get an OpenAI client, either from aiService or by constructing one - cái này dùng để lấy client OpenAI an toàn, lý do là có thể aiService không được cấu hình
 async function getClientSafe() {
   // Prefer shared aiService.getClient if available
   if (aiService && typeof aiService.getClient === 'function') {

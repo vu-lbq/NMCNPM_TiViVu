@@ -1,9 +1,8 @@
 const fs = require('fs');
 
-// Sử dụng OpenAI Whisper (`whisper-1`) để chuyển giọng nói thành văn bản qua Audio API
-// Tài liệu Whisper: https://platform.openai.com/docs/api-reference/audio/create-transcriptions
-// Hàm này dùng để chuyển đổi audio (STT - speech-to-text)
-async function transcribe({ filePath, openaiClient, model = 'whisper-1', language }) {
+// Sử dụng OpenAI Audio API để chuyển giọng nói thành văn bản (STT)
+// Mặc định dùng gpt-4o-mini-transcribe để tối ưu tốc độ/độ trễ
+async function transcribe({ filePath, openaiClient, model = 'gpt-4o-mini-transcribe', language }) {
   if (!openaiClient) throw new Error('OpenAI client not configured');
   if (!filePath || !fs.existsSync(filePath)) throw new Error('Audio file missing');
   try {
