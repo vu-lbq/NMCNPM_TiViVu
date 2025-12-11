@@ -1,0 +1,163 @@
+---
+config:
+  theme: default
+  layout: dagre
+---
+classDiagram
+direction TB
+
+%% Domain Models
+class User {
+  +id: UUID
+  +username: string
+  +email?: string
+  +passwordHash: string
+  +role: enum[admin,user]
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class Conversation {
+  +id: UUID
+  +title: string
+  +userId: UUID
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class Message {
+  +id: UUID
+  +conversationId: UUID
+  +author: enum[user,assistant,system]
+  +content: text
+  +metadata?: json
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class Vocabulary {
+  +id: UUID
+  +userId: UUID
+  +word: string
+  +phonetics?: string
+  +meaningEn?: text
+  +meaningVi?: text
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class Feedback {
+  +id: UUID
+  +userId: UUID
+  +type: enum[bug,idea,other]
+  +message: text
+  +status: enum[new,reviewed,resolved]
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+User "1" -- "0..*" Conversation : owns
+Conversation "1" -- "0..*" Message : contains
+User "1" -- "0..*" Vocabulary : saves
+User "1" -- "0..*" Feedback : submits
+
+%% Backend Components
+class AuthController {
+  +login()
+  +signup()
+  +me()
+}
+class PasswordController {
+  +forgotPassword()
+  +resetPassword()
+}
+class ConversationController {
+  +list()
+  +create()
+  +delete()
+}
+class MessageController {
+  +list()
+  +send()
+}
+class VocabController {
+  +list()
+  +save()
+  +delete()
+}
+class FeedbackController {
+  +list()
+  +submit()
+}
+class VoiceController {
+  +stt()
+  +tts()
+  +voiceChat()
+}
+class AiController {
+  +generateReply()
+  +stream()
+}
+
+class AiService {
+  +generateReply()
+  +generateTitle()
+}
+class SttService {
+  +transcribe(model='gpt-4o-mini-transcribe')
+}
+class TtsService {
+  +synthesize()
+}
+class MailService {
+  +sendMail()
+}
+
+class AuthMiddleware { +verifyJWT() }
+class ErrorHandler { +handle() }
+
+AuthController --> AuthMiddleware
+PasswordController --> MailService
+ConversationController --> AiService
+MessageController --> AiService
+VoiceController --> SttService
+VoiceController --> TtsService
+AiController --> AiService
+FeedbackController --> MailService
+
+%% Frontend (modules/components)
+class LoginPage { <<React Page>> }
+class ChatPage { <<React Page>> }
+class LandingPage { <<React Page>> }
+class ForgotPasswordPage { <<React Page>> }
+class ResetPasswordPage { <<React Page>> }
+class AdminDashboard { <<React Page>> }
+class AdminUsers { <<React Page>> }
+class AdminFeedback { <<React Page>> }
+
+class VoiceChatModal { <<Component>> }
+class DictionaryModal { <<Component>> }
+class FeedbackModal { <<Component>> }
+class ConversationsList { <<Component>> }
+class MessageBubble { <<Component>> }
+class FeatureTrio { <<Component>> }
+class Carousel { <<Component>> }
+class Hero { <<Component>> }
+
+class AuthContext { <<Context>> +user +token +rememberMe }
+class ApiService { <<frontend service>> +auth +ai +voice +vocab +feedback }
+
+ChatPage --> ApiService
+ChatPage --> VoiceChatModal
+ChatPage --> ConversationsList
+ChatPage --> MessageBubble
+LandingPage --> Hero
+LandingPage --> FeatureTrio
+LandingPage --> Carousel
+LoginPage --> AuthContext
+ForgotPasswordPage --> ApiService
+ResetPasswordPage --> ApiService
+DictionaryModal --> ApiService
+FeedbackModal --> ApiService
+AdminDashboard --> AdminUsers
+AdminDashboard --> AdminFeedback

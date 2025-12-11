@@ -1,0 +1,76 @@
+---
+config:
+  theme: default
+  layout: dagre
+---
+flowchart LR
+  %% Context (Level 1)
+  subgraph Context[Context]
+    U[User]
+    System[TiViVu System]
+    OpenAI[(OpenAI APIs)]
+    Mailjet[(Mailjet)]
+    U -- uses --> System
+    System -- calls --> OpenAI
+    System -- sends emails --> Mailjet
+  end
+
+  %% Containers (Level 2)
+  subgraph Containers[Containers]
+    FE[Frontend React/Vite SPA]
+    BE[Backend API Node-Express]
+    DB[(Postgres Database)]
+    CDN[(Static Hosting and CDN)]
+
+    FE -- fetch/WS --> BE
+    FE -- static assets --> CDN
+    BE -- ORM (Sequelize) --> DB
+    BE -- external APIs --> OpenAI
+    BE -- email delivery --> Mailjet
+  end
+
+  %% Components (Level 3) - backend
+  subgraph BE_Components[Backend Components]
+    R[routes]
+    CTRL[controllers]
+    SVC[services]
+    MIDDLE[middlewares]
+    UTIL[utils]
+    R --> CTRL
+    CTRL --> SVC
+    CTRL --> UTIL
+    R --> MIDDLE
+  end
+
+  %% Components (Level 3) - frontend
+  subgraph FE_Components[Frontend Components]
+    Pages[pages]
+    Components[components]
+    Contexts[context]
+    ServicesFE[services]
+    Pages --> Components
+    Pages --> ServicesFE
+    Components --> ServicesFE
+    Pages --> Contexts
+  end
+
+  %% Data (Level 3)
+  subgraph Data[Data Model]
+    UserTbl[(User)]
+    ConvTbl[(Conversation)]
+    MsgTbl[(Message)]
+    VocabTbl[(Vocabulary)]
+    FbkTbl[(Feedback)]
+    UserTbl --- ConvTbl
+    ConvTbl --- MsgTbl
+    UserTbl --- VocabTbl
+  end
+
+  %% Cross-links
+  FE --- FE_Components
+  BE --- BE_Components
+  DB --- Data
+
+  %% Notes
+  classDef external fill:#f5f7ff,stroke:#7a88b8,stroke-width:1px
+  class OpenAI,Mailjet,CDN external
