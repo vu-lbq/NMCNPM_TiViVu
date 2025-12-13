@@ -3,6 +3,8 @@ const app = express();
 const cors = require('cors');
 const morgan = require('morgan');
 const mainRouter = require('./routes/mainRouter');
+const swaggerUi = require('swagger-ui-express');
+const openapi = require('./openapi.json');
 
 // cau hinh CORS cho phep client từ các nguon khác truy cap API
 app.use(cors());
@@ -16,6 +18,8 @@ app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: process.env.URLENCODED_BODY_LIMIT || '25mb' }));
 
 // routes
+// Swagger UI available at /api-docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapi));
 app.use('/', mainRouter);
 
 // xu ly loi toan cuc

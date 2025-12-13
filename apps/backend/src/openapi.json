@@ -1,0 +1,73 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TiViVu API",
+    "version": "1.0.0",
+    "description": "OpenAPI mô tả các endpoint chính của TiViVu"
+  },
+  "servers": [
+    { "url": "http://localhost:3000", "description": "Local" }
+  ],
+  "paths": {
+    "/status": { "get": { "summary": "Kiểm tra API", "responses": { "200": { "description": "OK" } } } },
+    "/login": { "post": { "summary": "Đăng nhập", "responses": { "200": { "description": "Token + user" } } } },
+    "/register": { "post": { "summary": "Đăng ký", "responses": { "200": { "description": "Token + user" } } } },
+    "/me": { "get": { "summary": "Thông tin người dùng", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "User info" }, "401": { "description": "Unauthorized" } } } },
+    "/auth/forgot-password": { "post": { "summary": "Gửi link reset mật khẩu", "responses": { "200": { "description": "Sent" } } } },
+    "/auth/reset": {
+      "get": { "summary": "Xác thực token reset", "responses": { "200": { "description": "OK" } } },
+      "post": { "summary": "Đặt lại mật khẩu", "responses": { "200": { "description": "Reset OK" } } }
+    },
+    "/feedback": { "post": { "summary": "Gửi phản hồi", "responses": { "200": { "description": "Created" } } } },
+    "/admin/stats": { "get": { "summary": "Thống kê", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Stats" }, "403": { "description": "Forbidden" } } } },
+    "/admin/users": {
+      "get": { "summary": "Liệt kê người dùng", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "List" } } },
+      "post": { "summary": "Tạo người dùng", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/admin/users/{id}": {
+      "delete": { "summary": "Xóa người dùng", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "No Content" } } }
+    },
+    "/admin/users/{id}/toggle-role": {
+      "post": { "summary": "Chuyển vai trò", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/admin/feedback": { "get": { "summary": "Liệt kê feedback", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "List" } } } },
+    "/admin/feedback/{id}": { "delete": { "summary": "Xóa feedback", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "No Content" } } } },
+    "/conversations": {
+      "get": { "summary": "Danh sách hội thoại", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "List" } } },
+      "post": { "summary": "Tạo hội thoại", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/conversations/{id}": {
+      "get": { "summary": "Chi tiết hội thoại", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "Xóa hội thoại", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "No Content" } } }
+    },
+    "/conversations/cleanup-empty": {
+      "delete": { "summary": "Dọn hội thoại rỗng", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/conversations/{id}/messages": {
+      "get": { "summary": "Danh sách tin nhắn", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "List" } } },
+      "post": { "summary": "Gửi tin nhắn", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/tts": { "post": { "summary": "Text-to-Speech", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Audio" } } } },
+    "/stt": { "post": { "summary": "Speech-to-Text", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Transcript" } } } },
+    "/voice-chat": { "post": { "summary": "Voice Chat", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Audio + reply" } } } },
+    "/translate": { "post": { "summary": "Dịch văn bản", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Translation" } } } },
+    "/vocab/define": { "get": { "summary": "Tra từ điển", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Entries" } } } },
+    "/vocab": {
+      "get": { "summary": "Danh sách từ vựng", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "List" } } },
+      "post": { "summary": "Thêm từ vựng", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/vocab/{id}": {
+      "delete": { "summary": "Xóa từ vựng", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "No Content" } } }
+    },
+    "/ai/test": { "get": { "summary": "Kiểm tra AI", "responses": { "200": { "description": "OK" } } } }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

@@ -1,0 +1,139 @@
+Báo Cáo Dự Án (Bản thảo)
+=========================
+
+1. Tổng quan
+- Dự án: TiViVu — Trợ lý học tiếng Anh hỗ trợ chat chữ và giọng nói.
+- Công nghệ: Frontend (React + Vite), Backend (Node.js + Express), CSDL (Postgres + Sequelize ORM).
+- Tích hợp: OpenAI (LLM, TTS/STT), Mailjet (quên mật khẩu), JWT (xác thực).
+- Mục tiêu: Đăng nhập an toàn, AI hội thoại, chế độ rảnh tay bằng giọng nói, quản lý từ vựng, quản trị và thống kê.
+
+2. Thiết kế Use Case
+- Tác nhân: Người dùng (User), Quản trị (Admin), Hệ thống bên ngoài (OpenAI, Mailjet).
+- Use case chính (User):
+  - Đăng ký/Đăng nhập/Đăng xuất, Quên mật khẩu (gửi link reset qua Mailjet).
+  - Bắt đầu hội thoại, gửi tin nhắn, ghi âm/nhận diện giọng nói, hội thoại rảnh tay.
+  - Chạm vào từ → tra từ điển → lưu từ vựng.
+  - Xem lịch sử hội thoại, gửi phản hồi/báo lỗi.
+- Use case chính (Admin):
+  - Quản lý người dùng (tạo/xóa/chuyển vai trò).
+  - Theo dõi thống kê sử dụng, xem và duyệt phản hồi.
+- Ghi chú:
+  - Các thao tác bảo vệ (hội thoại/tin nhắn/từ vựng/giọng nói) yêu cầu phiên xác thực.
+  - Chế độ giọng nói ưu tiên trả lời ngắn để TTS nhanh; tự dừng khi im lặng.
+  - Sơ đồ tham khảo: docs/usecase-mermaid.mmd (Mermaid) và usecase-vi.md.
+
+3. Kiến trúc (C4: Bối cảnh & Container)
+- Bối cảnh:
+  - Người dùng → Hệ thống TiViVu → OpenAI (LLM/TTS/STT) và Mailjet (email).
+- Container:
+  - Frontend (React/Vite SPA): UI, xác thực, chat, modal giọng nói, từ điển/từ vựng.
+  - Backend API (Node/Express): routes/controllers/services; JWT; tích hợp OpenAI/Mailjet; lưu trữ dữ liệu.
+  - CSDL (Postgres): users, conversations, messages, vocabulary, feedback.
+  - Hosting tĩnh/CDN: phục vụ tài nguyên frontend.
+- Thành phần:
+  - Backend: routes, controllers, services (ai/stt/tts/mail), middlewares (auth/error), utils.
+  - Frontend: pages, components (chat/voice/dictionary/feedback), context (auth), services (API).
+- Sơ đồ: docs/architecture_mermaid.mmd và docs/c4-model.mmd.
+
+4. Mô hình lớp & dữ liệu (Miền nghiệp vụ)
+- Thực thể:
+  - User(id, username[email], passwordHash, role, createdAt, updatedAt).
+  - Conversation(id, userId, title, createdAt, updatedAt).
+  - Message(id, conversationId, role[user|assistant|system], content, metadata, createdAt, updatedAt).
+  - Vocabulary(id, userId, word, phonetics, meaningVi, createdAt, updatedAt).
+  - Feedback(id, userId, message, email, createdAt, updatedAt).
+- Quan hệ:
+  - User 1..* Conversation; Conversation 1..* Message.
+  - User 1..* Vocabulary; User 1..* Feedback.
+- Sơ đồ: docs/class_diagram.mmd (Mermaid), docs/class-diagram.puml (PlantUML).
+
+5. Thiết kế CSDL (Postgres + Sequelize)
+- Bảng:
+  - users: id (PK), username (unique, email), passwordHash, role, timestamps.
+  - conversations: id (PK), userId (FK→users), title, timestamps.
+  - messages: id (PK), conversationId (FK→conversations), role, content, metadata, timestamps.
+  - vocabularies: id (PK), userId (FK→users), word, phonetics, meaningVi, notes, source, timestamps.
+  - feedbacks: id (PK), userId (FK→users nullable), message, email, timestamps.
+- Migrations:
+  - 20251203000100-create-feedbacks.js
+  - 20251203001000-add-role-to-users.js
+  - 20251203002000-add-phonetics-to-vocabularies.js
+- ORM: Khai báo models trong apps/backend/src/models/*.js; khởi tạo bởi models/index.js; đồng bộ trong dbInit.js.
+- Chỉ mục/Ràng buộc:
+  - Unique: users.username; nên index messages.conversationId để truy xuất nhanh; vocabularies (userId, word) có thể unique tránh trùng lặp.
+
+6. Thiết kế API (Một số endpoint chính)
+- Auth: POST /login, POST /register, GET /me (JWT).
+- Password: POST /auth/forgot-password, GET /auth/reset, POST /auth/reset.
+- Conversations: GET/POST /conversations, GET/POST /conversations/:id/messages, DELETE /conversations/:id.
+- Voice & AI: POST /tts, POST /stt, POST /voice-chat (yêu cầu auth).
+- NLP & Dictionary: POST /translate, GET /vocab/define.
+- Vocabulary: GET /vocab, POST /vocab, DELETE /vocab/:id.
+- Feedback: POST /feedback.
+- Admin: CRUD stats/users/feedback (authenticate + ensureAdmin).
+
+7. Bảo mật & Xác thực
+- Xác thực JWT: middleware `authenticate` trích xuất Bearer token, kiểm `JWT_SECRET`, gắn thông tin người dùng.
+- Phân quyền: `ensureAdmin` cho endpoint quản trị.
+- Chính sách không “liệt kê” người dùng qua flow quên mật khẩu (tùy chọn qua env).
+- Bật CORS; secret chỉ ở backend; frontend không lộ API keys.
+
+8. Chat giọng nói & chế độ rảnh tay
+- Frontend `VoiceChatModal`:
+  - Ghi âm bằng MediaRecorder; Web Audio analyser phát hiện im lặng → tự dừng sau ~5s.
+  - Gửi `audioBase64` tới `/voice-chat`; phát audio TTS trả về; khi bật rảnh tay, tự khởi động lại sau ~1s.
+  - Hiển thị “Ready to record” khi tắt rảnh tay.
+- Backend `/voice-chat`:
+  - Lưu/kết nối Conversation và Message.
+  - STT: `sttService.transcribe` (mặc định gpt-4o-mini-transcribe).
+  - Trả lời: `aiService.generateAssistantReply` với prompt tối ưu cho giọng nói + `VOICECHAT_MAX_TOKENS`.
+  - TTS: `ttsService.synthesize`; trả `audioBase64 + contentType`.
+
+9. Email (Quên mật khẩu)
+- `mailService.js`: sử dụng Mailjet qua biến môi trường MAILJET_*; kiểm tra người gửi/nhận; log phản hồi.
+- Controller tạo link reset với token ký (utils/resetToken.js); hỗ trợ hết hạn 30 phút qua env.
+
+10. Cấu hình & Biến môi trường
+- Backend .env (ví dụ):
+  - OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE, OPENAI_MAX_TOKENS, VOICECHAT_MAX_TOKENS.
+  - MAILJET_API_KEY/SECRET, MAILJET_FROM_EMAIL/NAME.
+  - JWT_SECRET, RESET_JWT_SECRET, CORS_ORIGIN.
+  - STT mặc định: gpt-4o-mini-transcribe (có thể đổi).
+- Frontend .env: API base URL, thông số build; không chứa secret.
+
+11. Quản trị & Phân tích
+- Endpoints thống kê: usersActive7d, tổng số conversations/messages/vocabulary/feedback.
+- Quản lý người dùng: tạo/xóa/chuyển vai trò; duyệt phản hồi.
+
+12. Kiểm thử & Kiểm định
+- Unit tests (kế hoạch): controllers (auth/password/vocab), services (ai/mail/stt/tts).
+- Tích hợp: luồng end-to-end hội thoại giọng nói và quên mật khẩu.
+- Chất lượng mã: ESLint cho frontend; Prettier tùy chọn.
+
+13. Triển khai trên Render (3 tầng)
+- Nền tảng: Deploy toàn bộ 3 tầng trên Render (Postgres + Backend + Frontend).
+- CSDL (Render PostgreSQL):
+  - Tạo instance Postgres trên Render; dùng Internal Database URL làm `DATABASE_URL` cho backend.
+  - Yêu cầu SSL (dialectOptions.ssl); sao lưu/migrations; tối ưu index cho truy vấn chat.
+- Backend (Render Web Service – Node/Express):
+  - Root: `apps/backend`; Build: `npm install`; Start: `npm start`; Health path: `/`.
+  - Biến môi trường: `NODE_ENV=production`, `DATABASE_URL`, `OPENAI_API_KEY`, `JWT_SECRET`, `RESET_JWT_SECRET`, `MAILJET_API_KEY`, `MAILJET_API_SECRET`, `MAILJET_FROM_EMAIL`, `MAILJET_FROM_NAME`, `CORS_ORIGIN` (URL frontend).
+  - Giới hạn body: `JSON_BODY_LIMIT=25mb`, `URLENCODED_BODY_LIMIT=25mb`.
+  - Khởi động tự `sequelize.sync({ alter: true })` để đồng bộ schema.
+- Frontend (Render Static Site – React + Vite):
+  - Root: `apps/frontend`; Build: `npm install && npm run build`; Publish: `dist`.
+  - Biến môi trường: `VITE_API_BASE` trỏ tới URL public của backend.
+  - CORS: đảm bảo `CORS_ORIGIN` khớp origin frontend.
+- Blueprint (tuỳ chọn): có thể dùng `render.yaml` để khai báo one-click (Postgres + Web Service + Static Site), điền các env cần thiết.
+
+14. Hướng phát triển
+- Streaming SSE cho chat chữ để hiển thị token theo thời gian thực.
+- WebRTC Realtime voice với token tạm thời cho hội thoại thời gian thực.
+- Sinh ER diagram từ Sequelize; xây dựng OpenAPI spec cho API.
+- Điều chỉnh phát hiện im lặng/khử nhiễu; lựa chọn mô hình (Nhanh vs Chi tiết).
+
+15. Tài liệu tham khảo
+- Sơ đồ: docs/usecase-mermaid.mmd, docs/class_diagram.mmd, docs/architecture_mermaid.mmd, docs/c4-model.mmd.
+- Mã nguồn: apps/backend/src/controllers/*, services/*, middlewares/*, models/*, routes/*; apps/frontend/src/pages/*, components/*, context/*.
+
+Kết thúc bản thảo
