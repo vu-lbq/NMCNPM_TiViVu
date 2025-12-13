@@ -10,19 +10,19 @@
   ],
   "paths": {
     "/status": { "get": { "summary": "Kiểm tra API", "responses": { "200": { "description": "OK" } } } },
-    "/login": { "post": { "summary": "Đăng nhập", "responses": { "200": { "description": "Token + user" } } } },
-    "/register": { "post": { "summary": "Đăng ký", "responses": { "200": { "description": "Token + user" } } } },
+    "/login": { "post": { "summary": "Đăng nhập", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string", "minLength": 1 } }, "required": ["email", "password"] } } } }, "responses": { "200": { "description": "Token + user" }, "400": { "description": "Missing credentials" }, "401": { "description": "Invalid credentials" } } } },
+    "/register": { "post": { "summary": "Đăng ký", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string", "minLength": 1 }, "displayName": { "type": "string" } }, "required": ["email", "password"] } } } }, "responses": { "201": { "description": "Token + user" }, "409": { "description": "Email exists" } } } },
     "/me": { "get": { "summary": "Thông tin người dùng", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "User info" }, "401": { "description": "Unauthorized" } } } },
-    "/auth/forgot-password": { "post": { "summary": "Gửi link reset mật khẩu", "responses": { "200": { "description": "Sent" } } } },
+    "/auth/forgot-password": { "post": { "summary": "Gửi link reset mật khẩu", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string", "format": "email" } }, "required": ["email"] } } } }, "responses": { "200": { "description": "Sent" } } } },
     "/auth/reset": {
       "get": { "summary": "Xác thực token reset", "responses": { "200": { "description": "OK" } } },
-      "post": { "summary": "Đặt lại mật khẩu", "responses": { "200": { "description": "Reset OK" } } }
+      "post": { "summary": "Đặt lại mật khẩu", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" }, "newPassword": { "type": "string" } }, "required": ["token", "newPassword"] } } } }, "responses": { "200": { "description": "Reset OK" }, "400": { "description": "Invalid token/password" } } }
     },
-    "/feedback": { "post": { "summary": "Gửi phản hồi", "responses": { "200": { "description": "Created" } } } },
+    "/feedback": { "post": { "summary": "Gửi phản hồi", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string" }, "email": { "type": "string", "format": "email" } }, "required": ["message"] } } } }, "responses": { "201": { "description": "Created" } } } },
     "/admin/stats": { "get": { "summary": "Thống kê", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Stats" }, "403": { "description": "Forbidden" } } } },
     "/admin/users": {
       "get": { "summary": "Liệt kê người dùng", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "List" } } },
-      "post": { "summary": "Tạo người dùng", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+      "post": { "summary": "Tạo người dùng", "security": [{ "bearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string" }, "displayName": { "type": "string" }, "role": { "type": "string", "enum": ["user", "admin"] } }, "required": ["email", "password"] } } } }, "responses": { "201": { "description": "Created" } } }
     },
     "/admin/users/{id}": {
       "delete": { "summary": "Xóa người dùng", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "No Content" } } }
@@ -34,7 +34,7 @@
     "/admin/feedback/{id}": { "delete": { "summary": "Xóa feedback", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "No Content" } } } },
     "/conversations": {
       "get": { "summary": "Danh sách hội thoại", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "List" } } },
-      "post": { "summary": "Tạo hội thoại", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+      "post": { "summary": "Tạo hội thoại", "security": [{ "bearerAuth": [] }], "requestBody": { "required": false, "content": { "application/json": { "schema": { "type": "object", "properties": { "title": { "type": "string" } } } } } }, "responses": { "201": { "description": "Created" } } }
     },
     "/conversations/{id}": {
       "get": { "summary": "Chi tiết hội thoại", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
@@ -45,19 +45,19 @@
     },
     "/conversations/{id}/messages": {
       "get": { "summary": "Danh sách tin nhắn", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "List" } } },
-      "post": { "summary": "Gửi tin nhắn", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "201": { "description": "Created" } } }
+      "post": { "summary": "Gửi tin nhắn", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "content": { "type": "string" } }, "required": ["content"] } } } }, "responses": { "201": { "description": "Created" }, "400": { "description": "Missing content" } } }
     },
-    "/tts": { "post": { "summary": "Text-to-Speech", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Audio" } } } },
-    "/stt": { "post": { "summary": "Speech-to-Text", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Transcript" } } } },
-    "/voice-chat": { "post": { "summary": "Voice Chat", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Audio + reply" } } } },
-    "/translate": { "post": { "summary": "Dịch văn bản", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Translation" } } } },
-    "/vocab/define": { "get": { "summary": "Tra từ điển", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "Entries" } } } },
+    "/tts": { "post": { "summary": "Text-to-Speech", "security": [{ "bearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "text": { "type": "string" }, "voice": { "type": "string", "default": "auto" }, "format": { "type": "string", "enum": ["mp3", "wav", "ogg"], "default": "mp3" } }, "required": ["text"] } } } }, "responses": { "200": { "description": "Audio" }, "400": { "description": "Missing text" } } } },
+    "/stt": { "post": { "summary": "Speech-to-Text", "security": [{ "bearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "audioBase64": { "type": "string", "description": "Base64 audio" }, "language": { "type": "string" }, "filename": { "type": "string" } }, "required": ["audioBase64"] } } } }, "responses": { "200": { "description": "Transcript" }, "400": { "description": "Missing audio" } } } },
+    "/voice-chat": { "post": { "summary": "Voice Chat", "security": [{ "bearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "audioBase64": { "type": "string" }, "filename": { "type": "string" }, "language": { "type": "string", "default": "auto" }, "voice": { "type": "string", "default": "auto" }, "format": { "type": "string", "enum": ["mp3", "wav", "ogg"], "default": "mp3" }, "conversationId": { "type": "integer" }, "skipTts": { "type": "boolean" } }, "required": ["audioBase64"] } } } }, "responses": { "200": { "description": "Audio + reply" }, "400": { "description": "Missing audioBase64" } } } },
+    "/translate": { "post": { "summary": "Dịch văn bản", "security": [{ "bearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "text": { "type": "string" }, "targetLang": { "type": "string", "default": "en" } }, "required": ["text"] } } } }, "responses": { "200": { "description": "Translation" }, "400": { "description": "Missing text" } } } },
+    "/vocab/define": { "get": { "summary": "Tra từ điển", "security": [{ "bearerAuth": [] }], "parameters": [ { "name": "word", "in": "query", "required": true, "schema": { "type": "string" } }, { "name": "lang", "in": "query", "required": false, "schema": { "type": "string", "default": "en" } } ], "responses": { "200": { "description": "Entries" }, "400": { "description": "Missing word" } } } },
     "/vocab": {
       "get": { "summary": "Danh sách từ vựng", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "List" } } },
-      "post": { "summary": "Thêm từ vựng", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+      "post": { "summary": "Thêm từ vựng", "security": [{ "bearerAuth": [] }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "word": { "type": "string" }, "lang": { "type": "string", "default": "en" }, "meaningVi": { "type": "string" }, "notes": { "type": "string" }, "source": { "type": "string" }, "phonetics": { "type": "string" } }, "required": ["word"] } } } }, "responses": { "201": { "description": "Created" }, "400": { "description": "Validation error" } } }
     },
     "/vocab/{id}": {
-      "delete": { "summary": "Xóa từ vựng", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "No Content" } } }
+      "delete": { "summary": "Xóa từ vựng", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Removed count" }, "400": { "description": "Invalid id" } } }
     },
     "/ai/test": { "get": { "summary": "Kiểm tra AI", "responses": { "200": { "description": "OK" } } } }
   },
