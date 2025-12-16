@@ -1,0 +1,99 @@
+classDiagram
+direction TB
+
+class AuthContext {
+  <<Context>>
+}
+
+class AuthProvider {
+  <<Component>>
+  - user: User | null
+  - loading: boolean
+  - bootstrapping: boolean
+  + login(email: string, password: string) void
+  + register(payload: any) void
+  + logout() void
+}
+
+class useAuth {
+  <<Hook>>
+  + useAuth() AuthState
+}
+
+class App {
+  <<Component>>
+}
+
+class MainLayout {
+  <<Component>>
+  - sidebarOpen: boolean
+}
+
+class LandingPage { <<Page>> }
+class LoginPage { <<Page>> }
+class ForgotPasswordPage { <<Page>> }
+class ResetPasswordPage { <<Page>> }
+class ChatPage { <<Page>> }
+class AdminDashboard { <<Page>> }
+class AdminUsers { <<Page>> }
+class AdminFeedback { <<Page>> }
+
+class ConversationsList { <<Component>> }
+class MessageBubble { <<Component>> }
+class MarkdownContent { <<Component>> }
+class DictionaryModal { <<Modal>> }
+class VocabularyModal { <<Modal>> }
+class VoiceChatModal { <<Modal>> }
+class FeedbackModal { <<Modal>> }
+class Carousel { <<Component>> }
+class FeatureTrio { <<Component>> }
+class Hero { <<Component>> }
+
+class Api {
+  <<Service>>
+  + login()
+  + register()
+  + listConversations()
+  + postMessage()
+  + voiceChat()
+  + textToSpeech()
+  + speechToText()
+  + defineWord()
+  + adminStats()
+  + adminUsers()
+  + adminFeedback()
+}
+
+App o-- AuthProvider : wraps
+App --> LandingPage
+App --> LoginPage
+App --> ForgotPasswordPage
+App --> ResetPasswordPage
+App --> ChatPage
+App --> AdminDashboard
+App --> AdminUsers
+App --> AdminFeedback
+
+AuthProvider ..> AuthContext : provides
+useAuth --> AuthContext : useContext()
+
+MainLayout ..> useAuth
+MainLayout o-- ConversationsList
+
+LandingPage o-- Carousel
+LandingPage o-- FeatureTrio
+LandingPage o-- Hero
+
+ChatPage ..> useAuth
+ChatPage o-- MessageBubble
+ChatPage o-- DictionaryModal
+ChatPage o-- VocabularyModal
+ChatPage o-- VoiceChatModal
+ChatPage o-- FeedbackModal
+MessageBubble --> MarkdownContent
+
+LoginPage ..> Api : auth
+ChatPage ..> Api : conversations/voice
+AdminDashboard ..> Api : admin
+AdminUsers ..> Api : admin
+AdminFeedback ..> Api : admin

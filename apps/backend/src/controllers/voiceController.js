@@ -95,12 +95,12 @@ async function voiceChat(req, res) {
     const tmpPath = path.join(tmpDir, filename);
     const buffer = Buffer.from(audioBase64, 'base64');
     fs.writeFileSync(tmpPath, buffer);
-
+    // Transcribe audio, get transcript text
     const client = await getClientSafe();
     // STT
     const out = await transcribe({ filePath: tmpPath, openaiClient: client, language });
     const transcript = (out?.text || '').trim();
-
+    // Cleanup temp file
     try { fs.unlinkSync(tmpPath); } catch {}
 
     // Save user message

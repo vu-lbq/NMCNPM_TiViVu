@@ -1,0 +1,180 @@
+---
+config:
+  theme: default
+  layout: elk
+---
+classDiagram
+direction LR
+
+class User {
+  +UUID id
+  +string username
+  +string passwordHash
+  +string displayName
+  +enum role [user|admin]
+  +Date createdAt
+  +Date updatedAt
+}
+
+class Conversation {
+  +UUID id
+  +string title
+  +enum status [active|archived]
+  +UUID userId
+  +Date createdAt
+  +Date updatedAt
+}
+
+class Message {
+  +UUID id
+  +enum role [user|assistant]
+  +text content
+  +UUID conversationId
+  +UUID userId
+  +Date createdAt
+  +Date updatedAt
+}
+
+class Vocabulary {
+  +int id
+  +UUID userId
+  +string word
+  +string lang
+  +string phonetics
+  +text meaningVi
+  +text notes
+  +string source
+  +Date createdAt
+  +Date updatedAt
+}
+
+class Feedback {
+  +UUID id
+  +UUID? userId
+  +string? email
+  +text message
+  +Date createdAt
+  +Date updatedAt
+}
+
+%% Associations (Sequelize hasMany/belongsTo)
+User "1" --> "0..*" Conversation : hasMany
+Conversation "1" --> "0..*" Message : hasMany
+User "1" --> "0..*" Message : hasMany
+User "1" --> "0..*" Vocabulary : hasMany
+User "1" --> "0..*" Feedback : hasMany
+Message "0..*" --> "1" Conversation : belongsTo
+Message "0..*" --> "1" User : belongsTo
+Vocabulary "0..*" --> "1" User : belongsTo
+Feedback "0..*" --> "0..1" User : belongsTo
+
+%% Services
+class AIService {
+  +generateAssistantReply(conversationId, content, options)
+  +simplePrompt(promptText)
+  +generateConversationTitle(conversationId)
+}
+class STTService {
+  +transcribe(filePath, openaiClient, model, language)
+}
+class TTSService {
+  +synthesize(text, voice, format, openaiClient, language)
+  +detectLanguage(text)
+}
+class MailService {
+  +sendForgotPasswordMail(toEmail, toName, host, resetLink)
+}
+
+%% Controllers
+class AuthController {
+  +postRegister(req,res,next)
+  +postLogin(req,res,next)
+  +getMe(req,res)
+}
+class ConversationController {
+  +listConversations(req,res,next)
+  +getConversation(req,res,next)
+  +createConversation(req,res,next)
+  +deleteConversation(req,res,next)
+  +cleanupEmptyConversations(req,res,next)
+}
+class MessageController {
+  +listMessages(req,res,next)
+  +postMessage(req,res,next)
+}
+class VocabController {
+  +listVocab(req,res)
+  +addVocab(req,res)
+  +removeVocab(req,res)
+}
+class PasswordController {
+  +forgotPassword(req,res)
+  +showReset(req,res)
+  +resetPassword(req,res)
+}
+class FeedbackController {
+  +create(req,res)
+}
+class AdminController {
+  +stats(req,res)
+  +listUsers(req,res)
+  +createUser(req,res)
+  +deleteUser(req,res)
+  +toggleRole(req,res)
+  +listFeedback(req,res)
+  +deleteFeedback(req,res)
+}
+class NLPController {
+  +translateText(req,res)
+  +defineWord(req,res)
+}
+class VoiceController {
+  +textToSpeech(req,res)
+  +speechToText(req,res)
+  +voiceChat(req,res)
+}
+
+%% Middlewares
+class AuthMiddleware {
+  +authenticate(req,res,next)
+  +ensureAdmin(req,res,next)
+}
+class ErrorHandler {
+  +errorHandler(err,req,res,next)
+}
+
+%% Controller -> Model dependencies
+AuthController ..> User
+ConversationController ..> Conversation
+ConversationController ..> Message
+MessageController ..> Message
+MessageController ..> Conversation
+VocabController ..> Vocabulary
+PasswordController ..> User
+FeedbackController ..> Feedback
+AdminController ..> User
+AdminController ..> Feedback
+AdminController ..> Conversation
+AdminController ..> Message
+AdminController ..> Vocabulary
+
+%% Controller -> Service dependencies
+MessageController ..> AIService
+VocabController ..> AIService
+PasswordController ..> MailService
+NLPController ..> AIService
+VoiceController ..> STTService
+VoiceController ..> TTSService
+VoiceController ..> AIService
+
+%% Middleware use
+AuthMiddleware ..> User
+ErrorHandler ..> AuthController
+ErrorHandler ..> ConversationController
+ErrorHandler ..> MessageController
+ErrorHandler ..> VocabController
+ErrorHandler ..> PasswordController
+ErrorHandler ..> FeedbackController
+ErrorHandler ..> AdminController
+ErrorHandler ..> NLPController
+ErrorHandler ..> VoiceController
