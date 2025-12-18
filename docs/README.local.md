@@ -1,6 +1,3 @@
-# NMCNPM_TiViVu
-Phần Mềm Học Anh Văn Nâng Cao Khả Năng Giao Tiếp
-
 # Hướng dẫn chạy dự án trên localhost (Windows)
 
 Tài liệu này giúp bạn chạy cả Backend (API) và Frontend (Vite + React) trên máy local.
