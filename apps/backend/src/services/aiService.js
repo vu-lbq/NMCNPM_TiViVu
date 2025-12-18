@@ -93,7 +93,7 @@ async function generateAssistantReply(conversationId, userContent, options = {})
       body: JSON.stringify({
         model,
         messages,
-        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7),
+        temperature: Number(process.env.OPENAI_TEMPERATURE || 0.7), // mặc định 0.7, nghia là độ sáng tạo trung bình
         max_tokens: maxTokens,
       })
     });
